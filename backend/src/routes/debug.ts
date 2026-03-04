@@ -1,5 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { query } from '../config/database';
+import { findSimilarKnowledgeBase } from '../services/vectorSearchService';
+import { config } from '../config/env';
 
 const router = Router();
 
@@ -143,6 +145,39 @@ router.get('/professionals', async (req: Request, res: Response, next: NextFunct
     `);
 
     res.json({ professionals });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/debug/search-test - Test vector search against knowledge base
+router.get('/search-test', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { q, limit } = req.query;
+
+    if (!q || typeof q !== 'string') {
+      res.status(400).json({ error: { message: 'Query parameter "q" is required' } });
+      return;
+    }
+
+    const searchLimit = parseInt(limit as string) || 10;
+    const results = await findSimilarKnowledgeBase(q, searchLimit);
+
+    res.json({
+      query: q,
+      threshold: config.similarityThreshold,
+      matchCount: results.length,
+      results: results.map((r) => ({
+        messageId: r.messageId,
+        conversationId: r.conversationId,
+        role: r.role,
+        similarity: r.similarity.toFixed(4),
+        contentPreview: r.content.substring(0, 200) + (r.content.length > 200 ? '...' : ''),
+        professional: r.professional
+          ? `${r.professional.name}, ${r.professional.credentials} - ${r.professional.specialty}`
+          : null,
+      })),
+    });
   } catch (error) {
     next(error);
   }

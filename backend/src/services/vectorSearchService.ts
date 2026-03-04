@@ -21,6 +21,21 @@ export interface SimilarAnswer {
   similarity: number;
 }
 
+export interface KnowledgeBaseMatch {
+  messageId: string;
+  conversationId: string;
+  content: string;
+  role: string;
+  similarity: number;
+  professional: {
+    id: string;
+    name: string;
+    credentials: string;
+    specialty: string;
+    institution: string;
+  } | null;
+}
+
 export async function findSimilarQuestions(
   questionText: string,
   excludeQuestionId?: string
@@ -85,6 +100,66 @@ export async function findSimilarAnswers(
 
   // Filter by similarity threshold
   return answers.filter((a) => a.similarity >= config.similarityThreshold);
+}
+
+export async function findSimilarKnowledgeBase(
+  questionText: string,
+  limit: number = 5
+): Promise<KnowledgeBaseMatch[]> {
+  const embedding = await generateEmbedding(questionText);
+  const embeddingStr = formatEmbeddingForPgVector(embedding);
+
+  const sql = `
+    SELECT
+      cm.id as message_id,
+      cm.conversation_id,
+      cm.content,
+      cm.role,
+      1 - (cm.embedding <=> $1::vector) as similarity,
+      p.id as professional_id,
+      p.name as professional_name,
+      p.credentials,
+      p.specialty,
+      p.institution
+    FROM conversation_messages cm
+    LEFT JOIN professionals p ON cm.professional_id = p.id
+    WHERE cm.embedding IS NOT NULL
+    ORDER BY cm.embedding <=> $1::vector
+    LIMIT $2
+  `;
+
+  const results = await query<{
+    message_id: string;
+    conversation_id: string;
+    content: string;
+    role: string;
+    similarity: number;
+    professional_id: string | null;
+    professional_name: string | null;
+    credentials: string | null;
+    specialty: string | null;
+    institution: string | null;
+  }>(sql, [embeddingStr, limit]);
+
+  // Filter by similarity threshold and map to interface
+  return results
+    .filter((row) => row.similarity >= config.similarityThreshold)
+    .map((row) => ({
+      messageId: row.message_id,
+      conversationId: row.conversation_id,
+      content: row.content,
+      role: row.role,
+      similarity: row.similarity,
+      professional: row.professional_id
+        ? {
+            id: row.professional_id,
+            name: row.professional_name!,
+            credentials: row.credentials || '',
+            specialty: row.specialty || '',
+            institution: row.institution || '',
+          }
+        : null,
+    }));
 }
 
 export async function storeQuestionEmbedding(

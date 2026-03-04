@@ -1,5 +1,6 @@
 export interface Question {
   id: string;
+  user_id?: string | null;
   author_name: string | null;
   title: string;
   content: string;
@@ -10,6 +11,14 @@ export interface Question {
   answer_count?: number;
 }
 
+export interface Expert {
+  id: string;
+  name: string;
+  credentials: string;
+  specialty: string;
+  institution: string;
+}
+
 export interface Answer {
   id: string;
   question_id: string;
@@ -17,7 +26,10 @@ export interface Answer {
   content: string;
   is_ai_generated: boolean;
   ai_source: string | null;
-  source_answer_ids?: string[];
+  attribution_type?: 'expert' | 'ai_only' | 'human' | null;
+  source_message_ids?: string[];
+  expert_ids?: string[];
+  experts?: Expert[];
   upvotes: number;
   downvotes: number;
   created_at: string;
@@ -52,8 +64,10 @@ export interface CreateQuestionResponse {
   question: Question;
   aiAnswer: Answer;
   usedContext: boolean;
+  attributionType: 'expert' | 'ai_only';
+  experts: Expert[];
   similarQuestions: SimilarQuestion[];
-  sourceAnswersCount: number;
+  knowledgeMatchesCount: number;
 }
 
 export interface VoteResponse {

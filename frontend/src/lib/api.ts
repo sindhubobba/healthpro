@@ -40,6 +40,7 @@ export async function createQuestion(
 ): Promise<CreateQuestionResponse> {
   return fetchApi<CreateQuestionResponse>('/api/questions', {
     method: 'POST',
+    credentials: 'include',
     body: JSON.stringify({ title, content, authorName, tags }),
   });
 }
@@ -59,6 +60,12 @@ export async function vote(answerId: string, voteType: 'upvote' | 'downvote'): P
   return fetchApi<VoteResponse>('/api/votes', {
     method: 'POST',
     body: JSON.stringify({ answerId, voteType }),
+  });
+}
+
+export async function deleteQuestion(id: string): Promise<{ message: string }> {
+  return fetchApi<{ message: string }>(`/api/questions/${id}`, {
+    method: 'DELETE',
   });
 }
 

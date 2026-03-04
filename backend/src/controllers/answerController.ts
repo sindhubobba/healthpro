@@ -26,6 +26,11 @@ export async function createAnswer(
       return;
     }
 
+    if (!authorName || typeof authorName !== 'string' || !authorName.trim()) {
+      res.status(400).json({ error: { message: 'Author name is required' } });
+      return;
+    }
+
     // Verify question exists
     const question = await queryOne(
       'SELECT id FROM questions WHERE id = $1',
@@ -41,15 +46,16 @@ export async function createAnswer(
       `INSERT INTO answers (question_id, content, author_name, is_ai_generated)
        VALUES ($1, $2, $3, false)
        RETURNING *`,
-      [questionId, content, authorName || null]
+      [questionId, content, authorName.trim()]
     );
 
+    // TEMPORARILY DISABLED - uncomment when RAG debugging is complete
     // Store embedding for future RAG searches (async, don't wait)
-    if (answer) {
-      storeAnswerEmbedding(answer.id, content).catch((err) =>
-        console.error('Failed to store answer embedding:', err)
-      );
-    }
+    // if (answer) {
+    //   storeAnswerEmbedding(answer.id, content).catch((err) =>
+    //     console.error('Failed to store answer embedding:', err)
+    //   );
+    // }
 
     res.status(201).json({ answer });
   } catch (error) {

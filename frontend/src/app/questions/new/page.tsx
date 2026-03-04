@@ -1,17 +1,25 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
 import { createQuestion } from '@/lib/api';
 
 export default function NewQuestion() {
   const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [authorName, setAuthorName] = useState('');
   const [tags, setTags] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.replace('/login?redirect=/questions/new');
+    }
+  }, [user, authLoading, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,6 +45,17 @@ export default function NewQuestion() {
       setIsSubmitting(false);
     }
   };
+
+  if (authLoading || !user) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto" />
+        <p className="mt-4 text-gray-600">
+          {authLoading ? 'Loading...' : 'Redirecting to login...'}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -84,10 +103,11 @@ export default function NewQuestion() {
 
         <div>
           <label htmlFor="authorName" className="block text-sm font-medium text-gray-700 mb-2">
-            Your Name (optional)
+            Your Name *
           </label>
           <input
             type="text"
+            required
             id="authorName"
             value={authorName}
             onChange={(e) => setAuthorName(e.target.value)}
@@ -135,7 +155,7 @@ export default function NewQuestion() {
 
         <button
           type="submit"
-          disabled={isSubmitting || !title || !content}
+          disabled={isSubmitting || !title || !content || !authorName}
           className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isSubmitting ? (

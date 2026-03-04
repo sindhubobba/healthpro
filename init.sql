@@ -58,9 +58,21 @@ CREATE INDEX idx_professionals_specialty ON professionals(specialty);
 -- USER-FACING TABLES
 -- ============================================
 
+-- Users (for login/auth)
+CREATE TABLE users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email VARCHAR(255) UNIQUE NOT NULL,
+  password_hash VARCHAR(255) NOT NULL,
+  name VARCHAR(255),
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX idx_users_email ON users(email);
+
 -- Questions from users
 CREATE TABLE questions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES users(id),
   author_name VARCHAR(255),
   title VARCHAR(500) NOT NULL,
   content TEXT NOT NULL,
@@ -74,11 +86,13 @@ CREATE TABLE questions (
 -- Create index for vector similarity search
 CREATE INDEX ON questions USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
 CREATE INDEX idx_questions_created_at ON questions(created_at DESC);
+CREATE INDEX idx_questions_user_id ON questions(user_id);
 
 -- Answers (AI-generated using RAG from knowledge base, or human answers)
 CREATE TABLE answers (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   question_id UUID REFERENCES questions(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES users(id),
   author_name VARCHAR(255),
   content TEXT NOT NULL,
   embedding vector(1536),
@@ -96,6 +110,7 @@ CREATE TABLE answers (
 -- Indexes for answers
 CREATE INDEX ON answers USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
 CREATE INDEX idx_answers_question_id ON answers(question_id);
+CREATE INDEX idx_answers_user_id ON answers(user_id);
 
 -- Votes table
 CREATE TABLE votes (
