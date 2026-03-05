@@ -44,10 +44,13 @@ const server = app.listen(config.port, () => {
 });
 
 // Graceful shutdown so ts-node-dev can restart without EADDRINUSE
-const shutdown = () => {
+const shutdown = (signal: string) => () => {
   server.close(() => process.exit(0));
+  // Force exit if server hasn't closed in 2s
+  setTimeout(() => process.exit(0), 2000).unref();
 };
-process.on('SIGTERM', shutdown);
-process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown('SIGTERM'));
+process.on('SIGINT', shutdown('SIGINT'));
+process.on('SIGUSR2', shutdown('SIGUSR2'));
 
 export default app;

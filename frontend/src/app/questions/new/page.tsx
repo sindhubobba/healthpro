@@ -48,9 +48,9 @@ export default function NewQuestion() {
 
   if (authLoading || !user) {
     return (
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto" />
-        <p className="mt-4 text-gray-600">
+      <div className="page-shell max-w-3xl py-12 text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-600 mx-auto" />
+        <p className="mt-4 text-slate-600">
           {authLoading ? 'Loading...' : 'Redirecting to login...'}
         </p>
       </div>
@@ -58,21 +58,21 @@ export default function NewQuestion() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <h1 className="text-3xl font-bold text-gray-900 mb-2">Ask a Question</h1>
-      <p className="text-gray-600 mb-8">
+    <div className="page-shell max-w-3xl">
+      <h1 className="section-title mb-2">Ask a Question</h1>
+      <p className="section-subtitle mb-8">
         Get AI-powered answers and responses from other health professionals
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-600">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-600 text-sm">
             {error}
           </div>
         )}
 
         <div>
-          <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="title" className="field-label">
             Question Title *
           </label>
           <input
@@ -81,13 +81,13 @@ export default function NewQuestion() {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             required
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            className="field-input"
             placeholder="e.g., What are the current guidelines for hypertension management in elderly patients?"
           />
         </div>
 
         <div>
-          <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="content" className="field-label">
             Details *
           </label>
           <textarea
@@ -96,28 +96,28 @@ export default function NewQuestion() {
             onChange={(e) => setContent(e.target.value)}
             required
             rows={8}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-y"
+            className="field-textarea"
             placeholder="Provide more context about your question. Include relevant patient details, clinical scenario, or specific aspects you want addressed..."
           />
         </div>
 
         <div>
-          <label htmlFor="authorName" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="authorName" className="field-label">
             Your Name *
           </label>
           <input
             type="text"
-            required
             id="authorName"
+            required
             value={authorName}
             onChange={(e) => setAuthorName(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            className="field-input"
             placeholder="Dr. Jane Smith"
           />
         </div>
 
         <div>
-          <label htmlFor="tags" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="tags" className="field-label">
             Tags (optional, comma-separated)
           </label>
           <input
@@ -125,15 +125,15 @@ export default function NewQuestion() {
             id="tags"
             value={tags}
             onChange={(e) => setTags(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            className="field-input"
             placeholder="cardiology, hypertension, elderly"
           />
         </div>
 
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="bg-sky-50 border border-sky-100 rounded-lg p-4">
           <div className="flex items-start">
             <svg
-              className="w-5 h-5 text-blue-600 mt-0.5 mr-3"
+              className="w-5 h-5 text-sky-600 mt-0.5 mr-3"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -145,7 +145,7 @@ export default function NewQuestion() {
                 d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            <p className="text-sm text-blue-800">
+            <p className="text-sm text-slate-700">
               After submitting, our AI will analyze your question and provide an initial response
               based on medical knowledge and similar past questions. Other health professionals
               can also contribute their expertise.
@@ -156,7 +156,7 @@ export default function NewQuestion() {
         <button
           type="submit"
           disabled={isSubmitting || !title || !content || !authorName}
-          className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="btn-primary w-full"
         >
           {isSubmitting ? (
             <span className="flex items-center justify-center">

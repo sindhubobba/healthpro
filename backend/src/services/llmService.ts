@@ -9,12 +9,12 @@ const openai = new OpenAI({
 
 const anthropic = new Anthropic({
   apiKey: config.anthropicApiKey,
-  timeout: 120000, // 120 second timeout (2 minutes)
+  timeout: 120000,
 });
 
 export interface AIResponse {
   content: string;
-  source: 'openai' | 'anthropic' | 'openai+anthropic';
+  source: 'anthropic';
   usedContext: boolean;
   sourceMessageIds: string[];
   attributionType: 'expert' | 'ai_only';
@@ -27,11 +27,15 @@ export interface AIResponse {
   }>;
 }
 
-const SYSTEM_PROMPT = `
+interface JudgeResult {
+  sufficient: boolean;
+  reason: string;
+}
 
+const SYSTEM_PROMPT = `
 <system_instructions>
-  You are a knowledgeable medical AI assistant helping health professionals find answers to their clinical and medical questions.
-  Your answers must strictly follow the rules defined below based on whether context is available or not.
+  You are a medical AI assistant helping health professionals find answers to their clinical questions.
+  Your answers must strictly follow the rules below.
 
   <rules>
     <rule id="1" condition="context_available">
@@ -41,25 +45,10 @@ const SYSTEM_PROMPT = `
       and explicitly state what remains unanswered.
     </rule>
 
-    <rule id="2" condition="context_insufficient">
-      If the <context> block exists but lacks enough information to answer,
-      respond with:
-      "The provided context does not contain sufficient information to answer 
-      this question." 
-      Do not attempt to fill gaps with general knowledge.
-    </rule>
-
-    <rule id="3" condition="no_context">
-      If no <context> block is provided, or it is empty, answer using your 
-      general knowledge as a frontier language model.
-      Always prefix your response with:
-      "[General Knowledge]" 
-      to signal that no retrieved context was used.
-    </rule>
-
-    <rule id="4">
+    <rule id="2">
       Never mix context-based answers with general knowledge.
       Context always takes full priority when present.
+      Never generate medical advice from your own training data.
     </rule>
   </rules>
 </system_instructions>
@@ -76,37 +65,28 @@ const SYSTEM_PROMPT = `
 
 
 <output_format>
-  Write your entire response as natural, flowing conversation. No tags, 
+  Write your entire response as natural, flowing conversation. No tags,
   no headers, no bullet labels unless the content genuinely calls for a list.
 
-  If context was used:
-  - Answer conversationally from the context
-  - Close with a note like: "This comes from expert knowledge captured in our 
-    system, so you can feel confident in this answer."
-
-  If no context was provided:
-  - Open with a clear, friendly disclaimer that this is AI general knowledge, 
-    not from any expert or specialist in the system
-  - Then answer naturally
-
-  If context was present but insufficient:
-  - Conversationally let the user know the expert knowledge base didn't have 
-    enough to fully answer, and suggest they reach out to a specialist
+  Answer conversationally from the context. Close with a note like:
+  "This comes from expert knowledge captured in our system, so you can feel
+  confident in this answer."
 </output_format>
-
-
 `;
+
+const INSUFFICIENT_CONTEXT_MESSAGE =
+  "The knowledge available in the system isn't sufficient to fully answer this question. Please wait for a health professional to respond.";
+
+const NO_CONTEXT_MESSAGE =
+  "Knowledge about this question isn't available in the system yet. Please wait for a health professional to respond.";
 
 /**
  * Format knowledge base matches into a readable context string
  */
 function formatKnowledgeMatches(knowledgeMatches: KnowledgeBaseMatch[]): string {
-  if (knowledgeMatches.length === 0) {
-    return '';
-  }
+  if (knowledgeMatches.length === 0) return '';
 
   let contextSection = '';
-
   for (const match of knowledgeMatches) {
     const expertInfo = match.professional
       ? `[${match.professional.name}, ${match.professional.credentials} - ${match.professional.specialty}, ${match.professional.institution}]`
@@ -121,33 +101,61 @@ function formatKnowledgeMatches(knowledgeMatches: KnowledgeBaseMatch[]): string 
 }
 
 /**
- * Inject dynamic variables into the system prompt template
+ * Inject RAG context and user question into the system prompt template
  */
 function buildSystemPrompt(ragContext: string, userQuestion: string): string {
   return SYSTEM_PROMPT
-    .replace('{{RAG_CONTEXT}}', ragContext || '')
+    .replace('{{RAG_CONTEXT}}', ragContext)
     .replace('{{USER_QUESTION}}', userQuestion);
 }
 
-async function generateWithOpenAI(
-  userQuestion: string,
-  ragContext: string
-): Promise<string> {
-  const systemPrompt = buildSystemPrompt(ragContext, userQuestion);
-
+/**
+ * LLM-as-judge: uses gpt-4o to decide if RAG context is sufficient to answer
+ * the question before invoking the answer LLM.
+ */
+async function judgeContextSufficiency(
+  ragContext: string,
+  userQuestion: string
+): Promise<JudgeResult> {
   const response = await openai.chat.completions.create({
-    model: 'gpt-4-turbo-preview',
+    model: 'gpt-4o',
+    temperature: 0,
+    max_tokens: 150,
+    response_format: { type: 'json_object' },
     messages: [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: userQuestion },
+      {
+        role: 'system',
+        content: `You are a medical context evaluator. Decide whether the provided context contains enough information to meaningfully answer the clinical question.
+
+Respond with JSON only: {"sufficient": true/false, "reason": "one sentence"}
+
+Rules:
+- sufficient=true only if the context directly and specifically addresses the question
+- sufficient=false if context is tangential, too vague, or covers a different condition/scenario
+- Do NOT answer the question itself`,
+      },
+      {
+        role: 'user',
+        content: `Question: ${userQuestion}\n\nContext:\n${ragContext}`,
+      },
     ],
-    temperature: 0.7,
-    max_tokens: 1500,
   });
 
-  return response.choices[0]?.message?.content || '';
+  try {
+    const parsed = JSON.parse(response.choices[0]?.message?.content || '{}');
+    return {
+      sufficient: Boolean(parsed.sufficient),
+      reason: parsed.reason || '',
+    };
+  } catch {
+    console.error('[Judge] Failed to parse response, defaulting to sufficient=true');
+    return { sufficient: true, reason: 'parse error' };
+  }
 }
 
+/**
+ * Generate answer using Anthropic claude-sonnet, strictly from RAG context
+ */
 async function generateWithAnthropic(
   userQuestion: string,
   ragContext: string
@@ -158,35 +166,9 @@ async function generateWithAnthropic(
     model: 'claude-sonnet-4-20250514',
     max_tokens: 1500,
     system: systemPrompt,
-    messages: [
-      { role: 'user', content: userQuestion },
-    ],
+    messages: [{ role: 'user', content: userQuestion }],
   });
 
-  const textBlock = response.content.find((block) => block.type === 'text');
-  return textBlock?.type === 'text' ? textBlock.text : '';
-}
-
-async function refineWithAnthropic(
-  userQuestion: string,
-  openaiResponse: string
-): Promise<string> {
-  // For refinement: RAG_CONTEXT = OpenAI's response, USER_QUESTION = original question
-  const systemPrompt = buildSystemPrompt(openaiResponse, userQuestion);
-  console.log('[LLM] refineWithAnthropic: System prompt length:', systemPrompt.length);
-  console.log('[LLM] refineWithAnthropic: OpenAI response length:', openaiResponse.length);
-  console.log('[LLM] refineWithAnthropic: Calling Anthropic API...');
-
-  const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
-    max_tokens: 1500,
-    system: systemPrompt,
-    messages: [
-      { role: 'user', content: 'Please review and refine the response in the context for medical accuracy, completeness, and clarity. Output only the refined response.' },
-    ],
-  });
-
-  console.log('[LLM] refineWithAnthropic: Anthropic response received');
   const textBlock = response.content.find((block) => block.type === 'text');
   return textBlock?.type === 'text' ? textBlock.text : '';
 }
@@ -195,10 +177,8 @@ export async function generateAIResponse(
   question: string,
   knowledgeMatches: KnowledgeBaseMatch[]
 ): Promise<AIResponse> {
-  const usedContext = knowledgeMatches.length > 0;
   const sourceMessageIds = knowledgeMatches.map((m) => m.messageId);
 
-  // Extract unique experts from knowledge matches
   const expertsMap = new Map<string, AIResponse['experts'][0]>();
   for (const match of knowledgeMatches) {
     if (match.professional && !expertsMap.has(match.professional.id)) {
@@ -208,65 +188,48 @@ export async function generateAIResponse(
   const experts = Array.from(expertsMap.values());
   const attributionType = experts.length > 0 ? 'expert' : 'ai_only';
 
-  // Format knowledge matches into RAG context string
   const ragContext = formatKnowledgeMatches(knowledgeMatches);
 
-  // Step 1: Try to generate with OpenAI
-  // RAG_CONTEXT = knowledge base matches, USER_QUESTION = posted question
-  let openaiResponse: string | null = null;
-  try {
-    console.log('[LLM] Step 1: Calling OpenAI...');
-    openaiResponse = await generateWithOpenAI(question, ragContext);
-    console.log('[LLM] OpenAI response received, length:', openaiResponse?.length || 0);
-  } catch (openaiError) {
-    console.error('[LLM] OpenAI failed:', openaiError);
-  }
-
-  // Step 2: If OpenAI succeeded, refine with Anthropic
-  // RAG_CONTEXT = OpenAI response, USER_QUESTION = posted question
-  if (openaiResponse) {
-    try {
-      console.log('[LLM] Step 2: Calling Anthropic for refinement...');
-      const refinedContent = await refineWithAnthropic(question, openaiResponse);
-      console.log('[LLM] Anthropic refinement complete, length:', refinedContent?.length || 0);
-      return {
-        content: refinedContent,
-        source: 'openai+anthropic',
-        usedContext,
-        sourceMessageIds,
-        attributionType,
-        experts,
-      };
-    } catch (anthropicError) {
-      // Anthropic refinement failed, return OpenAI's unrefined response
-      console.error('[LLM] Anthropic refinement failed:', anthropicError);
-      return {
-        content: openaiResponse,
-        source: 'openai',
-        usedContext,
-        sourceMessageIds,
-        attributionType,
-        experts,
-      };
-    }
-  }
-
-  // Step 3: OpenAI failed, try Anthropic alone
-  // RAG_CONTEXT = knowledge base matches, USER_QUESTION = posted question
-  try {
-    console.log('[LLM] Step 3: OpenAI failed, calling Anthropic as fallback...');
-    const content = await generateWithAnthropic(question, ragContext);
-    console.log('[LLM] Anthropic fallback complete, length:', content?.length || 0);
+  // Step 1: No RAG matches — skip LLM entirely
+  if (!ragContext) {
+    console.log('[LLM] No RAG context, returning static message');
     return {
-      content,
+      content: NO_CONTEXT_MESSAGE,
       source: 'anthropic',
-      usedContext,
-      sourceMessageIds,
-      attributionType,
-      experts,
+      usedContext: false,
+      sourceMessageIds: [],
+      attributionType: 'ai_only',
+      experts: [],
     };
-  } catch (anthropicError) {
-    console.error('[LLM] Anthropic also failed:', anthropicError);
-    throw new Error('Both AI providers failed to generate a response');
   }
+
+  // Step 2: Judge — is the context sufficient to answer?
+  console.log('[LLM] Step 1: Calling judge (gpt-4o)...');
+  const judgeResult = await judgeContextSufficiency(ragContext, question);
+  console.log(`[LLM] Judge result: sufficient=${judgeResult.sufficient}, reason="${judgeResult.reason}"`);
+
+  if (!judgeResult.sufficient) {
+    return {
+      content: INSUFFICIENT_CONTEXT_MESSAGE,
+      source: 'anthropic',
+      usedContext: false,
+      sourceMessageIds: [],
+      attributionType: 'ai_only',
+      experts: [],
+    };
+  }
+
+  // Step 3: Context is sufficient — generate answer with Anthropic
+  console.log('[LLM] Step 2: Calling Anthropic for answer...');
+  const content = await generateWithAnthropic(question, ragContext);
+  console.log('[LLM] Anthropic response received, length:', content.length);
+
+  return {
+    content,
+    source: 'anthropic',
+    usedContext: true,
+    sourceMessageIds,
+    attributionType,
+    experts,
+  };
 }

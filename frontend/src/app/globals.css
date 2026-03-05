@@ -2,6 +2,66 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  @apply bg-gray-50;
+@layer base {
+  html,
+  body {
+    @apply h-full;
+  }
+
+  body {
+    @apply bg-slate-50 text-slate-900 antialiased;
+  }
+
+  ::selection {
+    @apply bg-sky-200 text-slate-900;
+  }
+}
+
+@layer components {
+  .page-shell {
+    @apply max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8;
+  }
+
+  .card {
+    @apply bg-white rounded-xl border border-slate-100 shadow-sm;
+  }
+
+  .section-title {
+    @apply text-2xl font-semibold text-slate-900 tracking-tight;
+  }
+
+  .section-subtitle {
+    @apply mt-1 text-sm text-slate-500;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-md bg-sky-700 px-5 py-2.5
+           text-sm font-semibold text-white shadow-sm
+           hover:bg-sky-800 focus-visible:outline-none
+           focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-md border border-slate-300
+           px-4 py-2 text-sm font-medium text-slate-700 bg-white
+           hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .field-label {
+    @apply block text-sm font-medium text-slate-700 mb-1.5;
+  }
+
+  .field-input {
+    @apply w-full px-3 py-2 rounded-md border border-slate-300
+           text-sm text-slate-900 placeholder-slate-400
+           focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500;
+  }
+
+  .field-textarea {
+    @apply w-full px-3 py-2 rounded-md border border-slate-300
+           text-sm text-slate-900 placeholder-slate-400
+           focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500
+           resize-y;
+  }
 }
