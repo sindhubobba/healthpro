@@ -1,6 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { query } from '../config/database';
 import { findSimilarKnowledgeBase } from '../services/vectorSearchService';
+import { generateEmbedding, formatEmbeddingForPgVector } from '../services/embeddingService';
 import { config } from '../config/env';
 
 const router = Router();
@@ -151,9 +152,10 @@ router.get('/professionals', async (req: Request, res: Response, next: NextFunct
 });
 
 // GET /api/debug/search-test - Test vector search against knowledge base
+// Use ?raw=true to bypass threshold and see actual similarity scores
 router.get('/search-test', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { q, limit } = req.query;
+    const { q, limit, raw } = req.query;
 
     if (!q || typeof q !== 'string') {
       res.status(400).json({ error: { message: 'Query parameter "q" is required' } });
@@ -161,6 +163,56 @@ router.get('/search-test', async (req: Request, res: Response, next: NextFunctio
     }
 
     const searchLimit = parseInt(limit as string) || 10;
+
+    if (raw === 'true') {
+      // Bypass threshold - show raw similarity scores for diagnosis
+      const embedding = await generateEmbedding(q);
+      const embeddingStr = formatEmbeddingForPgVector(embedding);
+
+      const rawResults = await query<{
+        message_id: string;
+        conversation_id: string;
+        content: string;
+        role: string;
+        similarity: number;
+        professional_name: string | null;
+        credentials: string | null;
+        specialty: string | null;
+      }>(`
+        SELECT
+          cm.id as message_id,
+          cm.conversation_id,
+          cm.content,
+          cm.role,
+          1 - (cm.embedding <=> $1::vector) as similarity,
+          p.name as professional_name,
+          p.credentials,
+          p.specialty
+        FROM conversation_messages cm
+        LEFT JOIN professionals p ON cm.professional_id = p.id
+        WHERE cm.embedding IS NOT NULL
+        ORDER BY cm.embedding <=> $1::vector
+        LIMIT $2
+      `, [embeddingStr, searchLimit]);
+
+      res.json({
+        query: q,
+        threshold: config.similarityThreshold,
+        mode: 'raw (threshold bypassed)',
+        resultCount: rawResults.length,
+        results: rawResults.map((r) => ({
+          messageId: r.message_id,
+          conversationId: r.conversation_id,
+          role: r.role,
+          similarity: Number(r.similarity).toFixed(4),
+          aboveThreshold: Number(r.similarity) >= config.similarityThreshold,
+          contentPreview: r.content.substring(0, 200) + (r.content.length > 200 ? '...' : ''),
+          professional: r.professional_name ? `${r.professional_name}, ${r.credentials} - ${r.specialty}` : null,
+        })),
+      });
+      return;
+    }
+
     const results = await findSimilarKnowledgeBase(q, searchLimit);
 
     res.json({

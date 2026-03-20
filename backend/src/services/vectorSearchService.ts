@@ -26,6 +26,7 @@ export interface KnowledgeBaseMatch {
   conversationId: string;
   content: string;
   role: string;
+  messageOrder: number;
   similarity: number;
   professional: {
     id: string;
@@ -115,6 +116,7 @@ export async function findSimilarKnowledgeBase(
       cm.conversation_id,
       cm.content,
       cm.role,
+      cm.message_order,
       1 - (cm.embedding <=> $1::vector) as similarity,
       p.id as professional_id,
       p.name as professional_name,
@@ -133,6 +135,7 @@ export async function findSimilarKnowledgeBase(
     conversation_id: string;
     content: string;
     role: string;
+    message_order: number;
     similarity: number;
     professional_id: string | null;
     professional_name: string | null;
@@ -149,6 +152,7 @@ export async function findSimilarKnowledgeBase(
       conversationId: row.conversation_id,
       content: row.content,
       role: row.role,
+      messageOrder: row.message_order,
       similarity: row.similarity,
       professional: row.professional_id
         ? {

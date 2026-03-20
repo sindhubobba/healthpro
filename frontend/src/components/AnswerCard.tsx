@@ -22,13 +22,15 @@ export default function AnswerCard({ answer }: AnswerCardProps) {
       }`}
     >
       <div className="flex">
-        <div className="mr-4">
-          <VoteButtons
-            answerId={answer.id}
-            initialUpvotes={answer.upvotes}
-            initialDownvotes={answer.downvotes}
-          />
-        </div>
+        {!answer.is_ai_generated && (
+          <div className="mr-4">
+            <VoteButtons
+              answerId={answer.id}
+              initialUpvotes={answer.upvotes}
+              initialDownvotes={answer.downvotes}
+            />
+          </div>
+        )}
         <div className="flex-1">
           <div className="flex items-center space-x-2 mb-3">
             {answer.is_ai_generated && <AIResponseBadge source={answer.ai_source} />}

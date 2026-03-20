@@ -8,7 +8,7 @@ export const config = {
   databaseUrl: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/healthpro',
   openaiApiKey: process.env.OPENAI_API_KEY || '',
   anthropicApiKey: process.env.ANTHROPIC_API_KEY || '',
-  similarityThreshold: parseFloat(process.env.SIMILARITY_THRESHOLD || '0.85'),
+  similarityThreshold: parseFloat(process.env.SIMILARITY_THRESHOLD || '0.65'),
   topKResults: 5,
   // JWT Configuration
   jwtSecret: process.env.JWT_SECRET || 'dev-secret-change-in-production',
