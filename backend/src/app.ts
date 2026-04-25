@@ -27,6 +27,7 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/questions', questionRoutes);
 app.use('/api/answers', answerRoutes);
+app.use('/api/debug', debugRoutes);
 
 // Error handling
 app.use(notFoundHandler);
