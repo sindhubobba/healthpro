@@ -38,6 +38,24 @@ export default function QuestionCard({ question }: QuestionCardProps) {
             </svg>
             {question.answer_count || 0} answers
           </span>
+          {(question.answer_count ?? 0) > 0 && question.has_human_answer === false && (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+              <svg
+                className="w-3 h-3 mr-1"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                />
+              </svg>
+              Expert input welcome
+            </span>
+          )}
           <span>{formattedDate}</span>
         </div>
         {question.author_name && (

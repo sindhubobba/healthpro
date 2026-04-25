@@ -3,7 +3,6 @@ import {
   QuestionDetailResponse,
   CreateQuestionResponse,
   Answer,
-  VoteResponse,
 } from '@/types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
@@ -53,13 +52,6 @@ export async function createAnswer(
   return fetchApi<{ answer: Answer }>('/api/answers', {
     method: 'POST',
     body: JSON.stringify({ questionId, content, authorName }),
-  });
-}
-
-export async function vote(answerId: string, voteType: 'upvote' | 'downvote'): Promise<VoteResponse> {
-  return fetchApi<VoteResponse>('/api/votes', {
-    method: 'POST',
-    body: JSON.stringify({ answerId, voteType }),
   });
 }
 

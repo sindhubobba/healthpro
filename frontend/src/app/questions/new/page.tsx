@@ -146,9 +146,9 @@ export default function NewQuestion() {
               />
             </svg>
             <p className="text-sm text-slate-700">
-              After submitting, our AI will analyze your question and provide an initial response
-              based on medical knowledge and similar past questions. Other health professionals
-              can also contribute their expertise.
+            After submitting, our AI will search for relevant peer consultations in our knowledge base and 
+            provide an instant response if a match is found. Other health professionals can also contribute 
+            their expertise.
             </p>
           </div>
         </div>

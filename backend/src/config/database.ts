@@ -3,7 +3,12 @@ import { config } from './env';
 
 export const pool = new Pool({
   connectionString: config.databaseUrl,
+  ssl: config.databaseUrl.includes('supabase') ? { rejectUnauthorized: false } : false,
 });
+
+pool.query('SELECT current_database(), inet_server_addr() as host')
+  .then(r => console.log(`[DB] Connected to: ${r.rows[0].current_database} @ ${r.rows[0].host}`))
+  .catch(() => {});
 
 pool.on('error', (err) => {
   console.error('Unexpected error on idle client', err);

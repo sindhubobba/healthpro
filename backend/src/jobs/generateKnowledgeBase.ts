@@ -13,9 +13,9 @@ interface Professional {
 }
 
 // Cache for professionals to avoid duplicates
-const professionalCache = new Map<string, string>();
+export const professionalCache = new Map<string, string>();
 
-async function getOrCreateProfessional(message: GeneratedMessage): Promise<string> {
+export async function getOrCreateProfessional(message: GeneratedMessage): Promise<string> {
   const cacheKey = `${message.expertName}-${message.specialty}-${message.institution}`;
 
   if (professionalCache.has(cacheKey)) {
@@ -49,7 +49,7 @@ async function getOrCreateProfessional(message: GeneratedMessage): Promise<strin
   return created.id;
 }
 
-async function storeConversation(conversation: GeneratedConversation): Promise<void> {
+export async function storeConversation(conversation: GeneratedConversation): Promise<void> {
   console.log(`  Storing conversation: ${conversation.title}`);
 
   // Create conversation record
@@ -158,7 +158,9 @@ async function main(): Promise<void> {
 }
 
 // Run if called directly
-main().catch((error) => {
-  console.error('Fatal error:', error);
-  process.exit(1);
-});
+if (require.main === module) {
+  main().catch((error) => {
+    console.error('Fatal error:', error);
+    process.exit(1);
+  });
+}

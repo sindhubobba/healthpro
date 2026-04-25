@@ -1,0 +1,254 @@
+You are helping expand the knowledge base for HealthPro, a RAG-powered 
+clinical Q&A platform for physicians. The knowledge base is built from 
+synthetic doctor-to-doctor consultation conversations generated from real 
+medical case reports.
+
+## Your Task
+
+Build a script that does the following end to end:
+1. Fetches real medical case reports from PubMed by specialty using 
+   the NCBI E-utilities API (no API key required for low volume; 
+   add key if available via NCBI_API_KEY env var)
+2. For each case report, uses GPT-4 Turbo to convert it into a 
+   realistic physician-to-physician consultation conversation in 
+   HealthPro's exact conversation format
+3. Inserts the generated conversations into the existing database 
+   using the same ingestion pipeline already in the codebase
+
+---
+
+## Target Volume and Specialty Distribution
+
+Generate 4–5 new conversations per specialty across these 8 specialties, 
+for a total of ~40 new conversations (bringing the KB from 10 to ~50):
+
+| Specialty         | Target Conversations | PubMed MeSH Term                          |
+|-------------------|---------------------|-------------------------------------------|
+| Cardiology        | 5                   | "Heart Diseases"[MeSH]                    |
+| Internal Medicine | 5                   | "Internal Medicine"[MeSH]                 |
+| Pulmonology       | 5                   | "Lung Diseases"[MeSH]                     |
+| Endocrinology     | 5                   | "Diabetes Mellitus, Type 2"[MeSH]         |
+| Neurology         | 5                   | "Nervous System Diseases"[MeSH]           |
+| Infectious Disease| 5                   | "Communicable Diseases"[MeSH]             |
+| Nephrology        | 5                   | "Kidney Diseases"[MeSH]                   |
+| Hematology        | 5                   | "Hematologic Diseases"[MeSH]              |
+
+Filter PubMed results to case reports only using:
+  &article_type=Case Reports
+
+---
+
+## PubMed Fetch Strategy
+
+Use NCBI E-utilities — no scraping, just API calls:
+
+Step 1 — Search (ESearch):
+  GET https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi
+  Params:
+    db=pubmed
+    term={MESH_TERM} AND "case reports"[Publication Type]
+    retmax=10        ← fetch 10 candidates per specialty; use first 5 
+                       that return usable full abstracts
+    retmode=json
+    sort=relevance
+
+Step 2 — Fetch abstract (EFetch):
+  GET https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi
+  Params:
+    db=pubmed
+    id={PMID}
+    rettype=abstract
+    retmode=text
+
+Use the abstract text as the source material for conversation generation.
+Full-text is not needed — abstracts contain sufficient clinical detail 
+(presentation, workup, diagnosis, management, outcome) for conversion.
+
+Validation before passing to GPT-4 Turbo:
+  - Skip if abstract is under 150 words (too thin for a conversation)
+  - Skip if abstract contains no clinical management content 
+    (pure lab/basic science abstracts)
+  - Log skipped PMIDs with reason
+
+---
+
+## Conversation Generation Prompt (GPT-4 Turbo)
+
+Use this exact system prompt for every GPT-4 Turbo call:
+
+SYSTEM:
+"""
+You are generating synthetic doctor-to-doctor consultation conversations 
+for a medical knowledge base. Each conversation must be realistic, 
+clinically accurate, and formatted exactly as specified.
+
+You will be given a PubMed case report abstract. Convert it into a 
+consultation conversation between two physicians: a consulting physician 
+(the one seeking advice) and a specialist (the one providing it).
+
+CONVERSATION REQUIREMENTS:
+- 6 to 10 messages total, alternating between the two physicians
+- The consulting physician opens with a clinical question or case 
+  description based on the abstract
+- The specialist responds with management guidance drawn from the 
+  abstract's findings and outcomes
+- Each message should be 2–5 sentences — realistic consultation length, 
+  not a lecture
+- Tone: collegial, direct, peer-to-peer — not formal documentation style
+- Clinical details must come from the abstract — do not add invented 
+  details not present in the source material
+- The conversation must resolve with a clear management recommendation 
+  or clinical conclusion
+
+ATTRIBUTION REQUIREMENTS:
+Assign realistic but entirely fictional physician identities. 
+For each conversation generate:
+
+Consulting physician:
+  - name: realistic full name (e.g., "Dr. James Patel")
+  - role: "consulting_physician"
+  - specialty: the referring specialty (e.g., "Internal Medicine")
+  - credentials: "MD"
+  - institution: a fictional but plausible US hospital name
+
+Specialist:
+  - name: realistic full name (e.g., "Dr. Sarah Chen")
+  - role: "specialist"
+  - specialty: the relevant specialist specialty for this case
+  - credentials: appropriate credential string 
+    (e.g., "MD, FACC" for cardiology, "MD, FCCP" for pulmonology)
+  - institution: a fictional but plausible US hospital name
+
+OUTPUT FORMAT:
+Return a single valid JSON object with this exact structure — 
+no preamble, no markdown, no explanation, JSON only:
+
+{
+  "specialty": "<specialist specialty>",
+  "topic": "<2–5 word clinical topic label>",
+  "source_pmid": "<PMID passed in>",
+  "participants": {
+    "consulting_physician": {
+      "name": "<full name>",
+      "role": "consulting_physician",
+      "specialty": "<specialty>",
+      "credentials": "<credentials>",
+      "institution": "<institution>"
+    },
+    "specialist": {
+      "name": "<full name>",
+      "role": "specialist",
+      "specialty": "<specialty>",
+      "credentials": "<credentials>",
+      "institution": "<institution>"
+    }
+  },
+  "messages": [
+    {
+      "role": "consulting_physician",
+      "content": "<message text>",
+      "message_order": 1
+    },
+    {
+      "role": "specialist",
+      "content": "<message text>",
+      "message_order": 2
+    }
+    // continue alternating for 6–10 messages
+  ]
+}
+"""
+
+USER message per call:
+"""
+Source PMID: {PMID}
+Specialty: {SPECIALTY}
+
+Abstract:
+{ABSTRACT_TEXT}
+
+Convert this into a physician consultation conversation following 
+the format and requirements in your instructions.
+"""
+
+---
+
+## Database Ingestion
+
+After generating each conversation, insert it using the existing 
+ingestion pipeline already in the codebase. Do not rewrite the 
+ingestion logic — find the existing function and call it.
+
+Before writing any ingestion code:
+  1. Search the codebase for the existing ingestion function — 
+     look for files related to "ingest", "seed", or "conversations" 
+     in the backend directory
+  2. Read that file fully before writing any insert logic
+  3. Match the exact table names, column names, and data types 
+     already in use
+  4. Use the same embedding call (text-embedding-3-large, 1536 dims) 
+     already used in the pipeline — do not introduce a second 
+     embedding pattern
+
+Each message in the generated conversation should be inserted as 
+a separate row in conversation_messages, with its own embedding 
+vector, matching the existing chunk-per-message architecture.
+
+---
+
+## Script Requirements
+
+- Language: TypeScript (match existing codebase)
+- Runtime: Node.js
+- File location: place the script at scripts/expand-kb.ts 
+  (or match the existing scripts directory convention in the codebase)
+- Environment variables: read from existing .env — do not hardcode 
+  any API keys or DB credentials
+- Required env vars (add to .env if not present):
+    OPENAI_API_KEY        ← already used in codebase
+    NCBI_API_KEY          ← optional; add if available for higher 
+                            PubMed rate limits
+- Logging: log progress per conversation — 
+  specialty / PMID / status (fetched / generated / inserted / skipped)
+- Error handling: if GPT-4 Turbo returns malformed JSON, log the 
+  error and skip that PMID — do not crash the script
+- Rate limiting: add a 500ms delay between PubMed API calls to 
+  respect NCBI rate limits (10 req/sec without API key, 
+  3 req/sec with key)
+- Dry run flag: support a --dry-run flag that fetches and generates 
+  conversations but does not insert into the database — useful for 
+  reviewing output quality before committing to the KB
+- Summary at end: print total conversations generated, inserted, 
+  and skipped per specialty
+
+---
+
+## Validation Before Insert
+
+Before inserting each generated conversation, validate the JSON:
+  - messages array has between 6 and 10 entries
+  - messages alternate roles (consulting_physician / specialist)
+  - every message has non-empty content and a message_order integer
+  - both participants have name, role, specialty, credentials, 
+    institution populated
+  - specialty field is non-empty
+
+If validation fails, log the failure with the PMID and skip — 
+do not insert a malformed conversation.
+
+---
+
+## Acceptance Criteria
+
+The script is complete when:
+  1. It runs end to end without errors on a --dry-run pass
+  2. Generated JSON passes all validation checks above
+  3. Conversation format matches the existing KB conversations 
+     already in the database — visually verify one generated 
+     conversation against an existing row before bulk insert
+  4. After a full run, the KB contains approximately 50 total 
+     conversations (10 existing + ~40 new)
+  5. Each new conversation_messages row has a populated embedding 
+     vector confirming the embedding call succeeded
+  6. Specialty distribution in the DB matches the target table above 
+     — verify with a COUNT query grouped by specialty

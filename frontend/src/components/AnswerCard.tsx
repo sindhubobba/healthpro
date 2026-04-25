@@ -1,6 +1,5 @@
 import { Answer } from '@/types';
 import AIResponseBadge from './AIResponseBadge';
-import VoteButtons from './VoteButtons';
 
 interface AnswerCardProps {
   answer: Answer;
@@ -22,15 +21,6 @@ export default function AnswerCard({ answer }: AnswerCardProps) {
       }`}
     >
       <div className="flex">
-        {!answer.is_ai_generated && (
-          <div className="mr-4">
-            <VoteButtons
-              answerId={answer.id}
-              initialUpvotes={answer.upvotes}
-              initialDownvotes={answer.downvotes}
-            />
-          </div>
-        )}
         <div className="flex-1">
           <div className="flex items-center space-x-2 mb-3">
             {answer.is_ai_generated && <AIResponseBadge source={answer.ai_source} />}
@@ -56,10 +46,10 @@ export default function AnswerCard({ answer }: AnswerCardProps) {
               </div>
             </div>
           )}
-          {answer.attribution_type === 'ai_only' && answer.is_ai_generated && (
+          {answer.attribution_type === 'expert' && answer.is_ai_generated && (
             <div className="mt-4 pt-3 border-t border-gray-100">
               <p className="text-xs text-gray-500">
-                AI-generated response without expert knowledge base match
+                AI-generated response with expert knowledge base match
               </p>
             </div>
           )}

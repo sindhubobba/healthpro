@@ -28,8 +28,6 @@ interface Answer {
   is_ai_generated: boolean;
   ai_source: string | null;
   attribution_type: string | null;
-  upvotes: number;
-  downvotes: number;
   created_at: Date;
 }
 
@@ -43,9 +41,15 @@ export async function listQuestions(
     const limit = parseInt(req.query.limit as string) || 20;
     const offset = (page - 1) * limit;
 
-    const questions = await query<Question & { answer_count: number }>(
+    const questions = await query<
+      Question & { answer_count: number; has_human_answer: boolean }
+    >(
       `SELECT q.*,
-        (SELECT COUNT(*) FROM answers WHERE question_id = q.id) as answer_count
+        (SELECT COUNT(*) FROM answers WHERE question_id = q.id) as answer_count,
+        (SELECT EXISTS (
+          SELECT 1 FROM answers
+          WHERE question_id = q.id AND is_ai_generated = false
+        )) as has_human_answer
        FROM questions q
        ORDER BY q.created_at DESC
        LIMIT $1 OFFSET $2`,
@@ -105,7 +109,7 @@ export async function getQuestion(
         ELSE NULL END as experts
        FROM answers a
        WHERE a.question_id = $1
-       ORDER BY a.is_ai_generated DESC, (a.upvotes - a.downvotes) DESC, a.created_at ASC`,
+       ORDER BY a.is_ai_generated DESC, a.created_at ASC`,
       [id]
     );
 
@@ -151,7 +155,7 @@ export async function createQuestion(
       throw new Error('Failed to create question');
     }
 
-    const questionText = `${title}\n${content}`;
+    const questionText = content?.trim() ? `${title}\n${content}` : title;
 
     // Search for similar questions (for duplicate detection / showing related)
     const similarQuestions = await findSimilarQuestions(questionText, question.id);
@@ -168,11 +172,12 @@ export async function createQuestion(
     // Store AI answer with proper attribution
     const aiAnswer = await queryOne<Answer>(
       `INSERT INTO answers (question_id, content, is_ai_generated, ai_source, attribution_type, source_message_ids, expert_ids)
-       VALUES ($1, $2, true, $3, $4, $5, $6)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING *`,
       [
         question.id,
         aiResponse.content,
+        aiResponse.usedContext,
         aiResponse.source,
         aiResponse.attributionType,
         aiResponse.sourceMessageIds,

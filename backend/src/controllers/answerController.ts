@@ -8,8 +8,6 @@ interface Answer {
   author_name: string | null;
   content: string;
   is_ai_generated: boolean;
-  upvotes: number;
-  downvotes: number;
   created_at: Date;
 }
 
@@ -74,7 +72,7 @@ export async function getAnswers(
     const answers = await query<Answer>(
       `SELECT * FROM answers
        WHERE question_id = $1
-       ORDER BY is_ai_generated DESC, (upvotes - downvotes) DESC, created_at ASC`,
+       ORDER BY is_ai_generated DESC, created_at ASC`,
       [questionId]
     );
 

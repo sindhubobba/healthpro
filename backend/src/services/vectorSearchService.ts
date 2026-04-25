@@ -16,8 +16,6 @@ export interface SimilarAnswer {
   content: string;
   is_ai_generated: boolean;
   author_name: string | null;
-  upvotes: number;
-  downvotes: number;
   similarity: number;
 }
 
@@ -87,8 +85,6 @@ export async function findSimilarAnswers(
       a.content,
       a.is_ai_generated,
       a.author_name,
-      a.upvotes,
-      a.downvotes,
       1 - (a.embedding <=> $1::vector) as similarity
     FROM answers a
     JOIN questions q ON a.question_id = q.id
@@ -145,6 +141,15 @@ export async function findSimilarKnowledgeBase(
   }>(sql, [embeddingStr, limit]);
 
   // Filter by similarity threshold and map to interface
+  // Debug: compare stored embedding vs fresh embedding for top result
+  if (results.length > 0) {
+    const topRow = results[0];
+    const storedVec = await query<{ first50: string }>(`SELECT LEFT(embedding::text, 50) AS first50 FROM conversation_messages WHERE id = $1`, [topRow.message_id]);
+    const freshEmbedding = await generateEmbedding(topRow.content);
+    console.log(`[KB] stored vec start: ${storedVec[0]?.first50}`);
+    console.log(`[KB] fresh  vec start: [${freshEmbedding.slice(0, 3).map(v => v.toFixed(6)).join(', ')}...]`);
+    console.log(`[KB] top scores: ${results.slice(0, 3).map(r => `${r.similarity.toFixed(4)}(${r.conversation_id.slice(0, 8)})`).join(', ')}`);
+  }
   return results
     .filter((row) => row.similarity >= config.similarityThreshold)
     .map((row) => ({

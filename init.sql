@@ -101,8 +101,6 @@ CREATE TABLE answers (
   attribution_type VARCHAR(50),         -- 'expert' | 'ai_only' | 'human'
   source_message_ids UUID[],            -- References conversation_messages used for RAG
   expert_ids UUID[],                    -- References professionals for expert attribution
-  upvotes INTEGER DEFAULT 0,
-  downvotes INTEGER DEFAULT 0,
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
 );
@@ -112,14 +110,3 @@ CREATE INDEX ON answers USING ivfflat (embedding vector_cosine_ops) WITH (lists 
 CREATE INDEX idx_answers_question_id ON answers(question_id);
 CREATE INDEX idx_answers_user_id ON answers(user_id);
 
--- Votes table
-CREATE TABLE votes (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  answer_id UUID REFERENCES answers(id) ON DELETE CASCADE,
-  voter_ip VARCHAR(45),
-  vote_type VARCHAR(10) CHECK (vote_type IN ('upvote', 'downvote')),
-  created_at TIMESTAMP DEFAULT NOW(),
-  UNIQUE(voter_ip, answer_id)
-);
-
-CREATE INDEX idx_votes_answer_id ON votes(answer_id);

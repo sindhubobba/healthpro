@@ -7,7 +7,11 @@
     "dev": "ts-node-dev --respawn --transpile-only src/app.ts",
     "build": "tsc",
     "start": "node dist/app.js",
-    "generate-knowledge-base": "ts-node src/jobs/generateKnowledgeBase.ts"
+    "generate-knowledge-base": "ts-node src/jobs/generateKnowledgeBase.ts",
+    "expand-kb": "ts-node src/jobs/expand-kb.ts",
+    "reindex": "ts-node src/jobs/reindex-embeddings.ts",
+    "eval": "ts-node src/evals/eval-runner.ts",
+    "setup-eval": "pip3 install -r src/evals/requirements.txt"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.24.0",
@@ -19,6 +23,7 @@
     "jsonwebtoken": "^9.0.2",
     "openai": "^4.47.0",
     "pg": "^8.11.5",
+    "langsmith": "^0.5.22",
     "uuid": "^9.0.1"
   },
   "devDependencies": {

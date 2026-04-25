@@ -6,7 +6,6 @@ import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import authRoutes from './routes/auth';
 import questionRoutes from './routes/questions';
 import answerRoutes from './routes/answers';
-import voteRoutes from './routes/votes';
 import debugRoutes from './routes/debug';
 
 const app = express();
@@ -19,9 +18,6 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 
-// Trust proxy for accurate IP addresses (for voting)
-app.set('trust proxy', true);
-
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
@@ -31,17 +27,17 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/questions', questionRoutes);
 app.use('/api/answers', answerRoutes);
-app.use('/api/votes', voteRoutes);
-app.use('/api/debug', debugRoutes);  // TODO: Remove in production
 
 // Error handling
 app.use(notFoundHandler);
 app.use(errorHandler);
 
 // Start server
+if (process.env.NODE_ENV !== 'production') {
 const server = app.listen(config.port, () => {
   console.log(`Server running on http://localhost:${config.port}`);
 });
+
 
 // Graceful shutdown so ts-node-dev can restart without EADDRINUSE
 const shutdown = (signal: string) => () => {
@@ -52,5 +48,6 @@ const shutdown = (signal: string) => () => {
 process.on('SIGTERM', shutdown('SIGTERM'));
 process.on('SIGINT', shutdown('SIGINT'));
 process.on('SIGUSR2', shutdown('SIGUSR2'));
+}
 
 export default app;

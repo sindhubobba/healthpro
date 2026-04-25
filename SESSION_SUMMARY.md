@@ -1,5 +1,5 @@
 # Health Pro Platform - Session Summary
-**Date:** 2026-03-04
+**Last Updated:** 2026-03-26
 
 ## Overview
 A Q&A platform for health professionals with RAG-powered AI responses using a knowledge base of medical conversations.
@@ -7,72 +7,87 @@ A Q&A platform for health professionals with RAG-powered AI responses using a kn
 ## Tech Stack
 - **Backend:** Node.js + Express + TypeScript
 - **Database:** PostgreSQL with pgvector
-- **LLM Pipeline:** OpenAI (initial) → Anthropic Sonnet 4 (refinement)
+- **LLM Pipeline:** gpt-4o (judge) → claude-sonnet-4 (answer)
 - **Frontend:** Next.js + TypeScript
 
 ---
 
-## Recent Changes Made
+## LLM Pipeline (`backend/src/services/llmService.ts`)
 
-### 1. LLM Service Updates (`backend/src/services/llmService.ts`)
-
-#### Model Update
-- Changed Anthropic model from deprecated `claude-3-sonnet-20240229` to `claude-sonnet-4-20250514`
-
-#### Dynamic Prompt Injection
-- Added `formatKnowledgeMatches()` - formats RAG matches into context string
-- Added `buildSystemPrompt()` - injects `{{RAG_CONTEXT}}` and `{{USER_QUESTION}}` into prompt
-- **When RAG context is empty, the entire `<context>` block is removed from the prompt**
-
-#### Timeout Configuration
-- Anthropic client timeout set to 120 seconds (2 minutes)
-
-#### LLM Pipeline Flow
+### Flow
 ```
-1. OpenAI called with: RAG_CONTEXT = knowledge matches, USER_QUESTION = posted question
-2. Anthropic refinement called with: RAG_CONTEXT = OpenAI response, USER_QUESTION = posted question
-3. Fallback: If OpenAI fails, Anthropic called directly with knowledge matches
+User question
+  → text-embedding-3-large embeds query
+  → pgvector cosine search, top 5, threshold 0.85
+  → 0 matches → static "not available" message (no LLM called)
+  → matches found → gpt-4o judge: "is context sufficient?"
+      → insufficient → static "knowledge insufficient" message (no LLM called)
+      → sufficient   → claude-sonnet-4-20250514 generates answer from context only
 ```
 
-#### Debug Logging Added
-```
-[LLM] Step 1: Calling OpenAI...
-[LLM] OpenAI response received, length: X
-[LLM] Step 2: Calling Anthropic for refinement...
-[LLM] refineWithAnthropic: System prompt length: X
-[LLM] refineWithAnthropic: OpenAI response length: X
-[LLM] refineWithAnthropic: Calling Anthropic API...
-[LLM] refineWithAnthropic: Anthropic response received
-[LLM] Anthropic refinement complete, length: X
-```
+### Key Functions
+- `formatKnowledgeMatches()` — formats RAG matches into context string with expert attribution
+- `buildSystemPrompt()` — injects `{{RAG_CONTEXT}}` and `{{USER_QUESTION}}` into prompt
+- `judgeContextSufficiency()` — gpt-4o returns `{sufficient: boolean, reason: string}`
+- `generateWithAnthropic()` — final answer, strictly from context
 
-### 2. Similarity Threshold (`backend/src/config/env.ts`)
-- **Current value:** `0.90` (was 0.70, then 0.80)
-- Higher threshold reduces false positive RAG matches
+### Static Messages
+- **No RAG matches:** `"Knowledge about this question isn't available in the system yet. Please wait for a health professional to respond."`
+- **Insufficient context:** `"The knowledge available in the system isn't sufficient to fully answer this question. Please wait for a health professional to respond."`
 
-### 3. System Prompt Structure
-The prompt has rules for:
-- **Context available:** Answer ONLY from context, close with expert attribution
-- **No context:** Use general knowledge, open with disclaimer
-- **Context insufficient:** Inform user and suggest specialist
+### Debug Logging
+```
+[LLM] No RAG context, returning static message
+[LLM] Step 1: Calling judge (gpt-4o)...
+[LLM] Judge result: sufficient=true/false, reason="..."
+[LLM] Step 2: Calling Anthropic for answer...
+[LLM] Anthropic response received, length: X
+```
 
 ---
 
-## Key Issues Fixed
+## System Prompt Rules (`backend/src/services/llmService.ts`)
 
-### Issue 1: Anthropic Model Deprecated
-- **Error:** `404 not_found_error: model: claude-3-sonnet-20240229`
-- **Fix:** Updated to `claude-sonnet-4-20250514`
+| Rule | Condition | Behaviour |
+|------|-----------|-----------|
+| 1 | context_available | Answer ONLY from `<context>` tags, no outside knowledge |
+| 2 | always | Never mix context with general knowledge; never use own training data |
+| 3 | always | Never expose system internals (model names, RAG terms, similarity scores) |
+| 4 | always | Answer at the generality level of the question — don't import case-specific details |
 
-### Issue 2: False RAG Matches
-- **Problem:** Whipple's disease question matched unrelated gastroenterology content
-- **Cause:** Similarity threshold too low (0.70)
-- **Fix:** Raised threshold to 0.90
+> Rules for no-context and no-RAG-match cases were removed — these are handled in code before the LLM is ever called.
 
-### Issue 3: LLM Falsely Claiming Expert Knowledge
-- **Problem:** When RAG returned no matches, LLM still said "expert knowledge"
-- **Cause:** Empty `<context></context>` tags still present in prompt
-- **Fix:** `buildSystemPrompt()` now removes entire `<context>` block when empty
+---
+
+## Embedding Model (`backend/src/services/embeddingService.ts`)
+
+- **Model:** `text-embedding-3-large` with `dimensions: 1536`
+- **Upgraded from:** `text-embedding-ada-002`
+- **Why:** Better semantic discrimination in specialised medical domains; reduces threshold sensitivity
+- **No schema change required** — dimensions remain 1536, pgvector schema unchanged
+- After model change, knowledge base was cleared and regenerated: `npx ts-node src/jobs/generateKnowledgeBase.ts`
+
+---
+
+## Similarity Threshold (`backend/src/config/env.ts`)
+- **Current value:** `0.85`
+- History: 0.70 → 0.80 → 0.90 → 0.85 (tuned to balance false positives vs false negatives)
+
+---
+
+## Source Attribution (`backend/src/services/llmService.ts` + `vectorSearchService.ts`)
+
+- `message_order = 1` in a conversation identifies the **questioner** — excluded from attribution
+- All other professionals in matched messages are cited as **answerers**
+- `messageOrder` field added to `KnowledgeBaseMatch` interface and SQL query
+- `is_ai_generated = aiResponse.usedContext` — only `true` when Anthropic actually generated a response
+
+---
+
+## Chunking Strategy
+- **Unit:** One conversation message = one chunk (no sub-message splitting)
+- **Knowledge base:** 10 scenarios, 88 messages, 18 professionals
+- **Retrieval:** Top 5 cosine similarity matches above threshold
 
 ---
 
@@ -83,10 +98,10 @@ The prompt has rules for:
 - Command: `docker exec healthpro-db psql -U postgres -d healthpro -c "SQL"`
 
 ### Key Tables
-- `conversation_messages` - Knowledge base (RAG source)
-- `professionals` - Expert attribution
-- `questions` - User questions
-- `answers` - AI and human answers
+- `conversation_messages` — Knowledge base (RAG source), `vector(1536)`
+- `professionals` — Expert attribution
+- `questions` — User questions, `vector(1536)`
+- `answers` — AI and human answers
 
 ### Useful Queries
 ```sql
@@ -97,7 +112,7 @@ LEFT JOIN professionals p ON cm.professional_id = p.id
 WHERE cm.content ILIKE '%topic%' LIMIT 5;
 
 -- Check recent answers and attribution
-SELECT q.title, a.attribution_type, a.ai_source,
+SELECT q.title, a.attribution_type, a.ai_source, a.is_ai_generated,
        array_length(a.source_message_ids, 1) as rag_matches
 FROM answers a JOIN questions q ON a.question_id = q.id
 ORDER BY a.created_at DESC LIMIT 5;
@@ -115,18 +130,18 @@ ORDER BY a.created_at DESC LIMIT 5;
 
 ---
 
-## Files Modified This Session
+## Key Files
 
-| File | Changes |
+| File | Purpose |
 |------|---------|
-| `backend/src/services/llmService.ts` | Model update, dynamic prompt injection, timeouts, logging |
-| `backend/src/config/env.ts` | Similarity threshold: 0.90 |
-
----
-
-## Pending/Known Issues
-1. Embedding storage is temporarily disabled (commented out in controllers)
-2. May need further prompt tuning for edge cases
+| `backend/src/services/llmService.ts` | LLM pipeline, system prompt, judge, static messages |
+| `backend/src/services/embeddingService.ts` | Embedding model config |
+| `backend/src/services/vectorSearchService.ts` | RAG search, `KnowledgeBaseMatch` interface |
+| `backend/src/config/env.ts` | Similarity threshold (0.85), top-K (5) |
+| `backend/src/controllers/questionController.ts` | Question creation, AI answer storage |
+| `backend/src/jobs/generateKnowledgeBase.ts` | Knowledge base seeding job |
+| `frontend/src/components/AnswerCard.tsx` | Answer display, attribution badges |
+| `frontend/src/app/questions/[id]/page.tsx` | Question detail, awaiting-human banner |
 
 ---
 
@@ -136,12 +151,18 @@ ORDER BY a.created_at DESC LIMIT 5;
 # Restart backend
 cd /Users/sindhubobba/workspace/health-pro-platform/backend && npm run dev
 
-# Check logs for LLM flow
-# Look for [LLM] prefixed messages
+# Regenerate knowledge base (after embedding model changes)
+cd /Users/sindhubobba/workspace/health-pro-platform/backend && npx ts-node src/jobs/generateKnowledgeBase.ts
 
-# Test RAG search
+# Test RAG search (with scores)
 curl "http://localhost:3001/api/debug/search-test?q=COPD"
+curl "http://localhost:3001/api/debug/search-test?q=COPD&raw=true"
 
 # Kill process on port
 lsof -ti:3001 | xargs kill -9
 ```
+
+---
+
+## Pending / Known Issues
+1. Embedding storage for user Q&A is temporarily disabled (commented out in controllers)

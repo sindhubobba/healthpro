@@ -105,6 +105,8 @@ export default function QuestionDetail() {
   });
 
   const isQuestionOwner = !!user && !!question.user_id && user.id === question.user_id;
+  const hasHumanAnswer = answers.some((a) => !a.is_ai_generated);
+  const awaitingHuman = answers.some((a) => a.attribution_type === 'expert') && !hasHumanAnswer;
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -147,6 +149,26 @@ export default function QuestionDetail() {
 
       {/* Answers */}
       <div className="mb-8">
+        {awaitingHuman && (
+          <div className="mb-4 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            <svg
+              className="h-5 w-5 shrink-0"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+              />
+            </svg>
+            <span>
+              This question has AI-generated responses only. No human expert has answered yet.
+            </span>
+          </div>
+        )}
         <h2 className="text-xl font-semibold text-gray-900 mb-4">
           {answers.length} {answers.length === 1 ? 'Answer' : 'Answers'}
         </h2>

@@ -29,6 +29,8 @@ export interface AIResponse {
 
 interface JudgeResult {
   sufficient: boolean;
+  partial: boolean;
+  missing_context: string;
   reason: string;
 }
 
@@ -41,50 +43,22 @@ const SYSTEM_PROMPT = `
     <rule id="1" condition="context_available">
       Answer ONLY using the information within the <context> tags.
       Do not supplement, infer beyond, or mix with outside knowledge.
-      If context only partially answers the question, use what is available 
-      and acknowledge the gap conversationally without falling back to 
-      general knowledge.
+      If context only partially answers the question, use what is available
+      and acknowledge the gap conversationally without falling back to
+      general knowledge. Explicitly identify what aspect of the question
+      the available context does not cover (e.g. "the available discussions
+      do not address X specifically"). End by suggesting the physician
+      wait for a colleague to respond with more complete guidance on the
+      missing aspects.
     </rule>
 
-     <rule id="2" condition="no_context_provided">
-      If no context block is present at all, be transparent with the user.
-      Respond warmly and honestly. Do NOT attempt to answer the question.
-      Do NOT fall back to general knowledge.
-      Instead, use a response in this spirit:
-
-     "Just so you know — I don't have any expert-verified conversations 
-      on this topic in our system yet. Please wait for a 
-      specialist to review it and give you a verified, accurate response."
-
-      Then offer a helpful nudge:
-      "In the meantime, feel free to browse related topics or ask me 
-      something else — I'm happy to help with whatever I can."
-    </rule>
-
-    <rule id="3" condition="no_rag_match">
-      If no matching context was found above the similarity threshold, 
-      respond warmly and honestly. Do NOT attempt to answer the question.
-      Do NOT fall back to general knowledge.
-      Instead, use a response in this spirit:
-
-      "Just so you know — I don't have any expert-verified conversations 
-      on this topic in our system yet. Please wait for a
-      specialist to review it and give you a verified, accurate response."
-
-      Then offer a helpful nudge:
-      "In the meantime, feel free to browse related topics or ask me 
-      something else — I'm happy to help with whatever I can."
-
-      Always log the unanswered question for specialist review.
-    </rule>
-
-    <rule id="4">
+    <rule id="2">
       Never mix context-based answers with general knowledge.
       Context always takes full priority when present.
       Never generate medical advice from your own training data.
     </rule>
 
-    <rule id="5">
+    <rule id="3">
       Never expose system internals to the user. This includes:
       - XML or HTML tags
       - Similarity scores or threshold values
@@ -94,7 +68,7 @@ const SYSTEM_PROMPT = `
       Always communicate in plain, natural, conversational language.
     </rule>
 
-    <rule id="6">
+    <rule id="4">
   Answer at the level of generality that matches the user's question.
   
   - If the question is general (no specific patient details given), answer in 
@@ -111,6 +85,26 @@ const SYSTEM_PROMPT = `
   - Only incorporate patient-specific details in your answer if the user 
     explicitly provided them in their question.
 </rule>
+
+<rule id="5">
+      Format and length:
+      - Write in prose only. Do not use markdown headers, bullet lists,
+        numbered lists, or bold formatting.
+      - Respond in 2–4 concise paragraphs using plain clinical language.
+      - Write as a knowledgeable peer would speak — direct, collegial,
+        and without unnecessary disclaimers or preamble.
+      - Do not exceed 400 words. Do not pad the response.
+      - Do not begin the response with "I" or with a restatement of
+        the question.
+    </rule>
+
+    <rule id="6">
+      Never generate, invent, or infer source attribution.
+      Do not name specialists, credentials, or institutions in your
+      response. Source attribution is handled separately by the system
+      and displayed alongside your answer. Your response contains
+      answer text only.
+    </rule>
 
     
   </rules>
@@ -132,8 +126,6 @@ const SYSTEM_PROMPT = `
  If context was used:
   - Answer conversationally from the context.
 
-  If no context was provided:
-  - Answer naturally with aclear, friendly note that there is no expert-verified conversation on this topic in our system yet.
 </output_format>
 `;
 
@@ -190,11 +182,13 @@ async function judgeContextSufficiency(
         role: 'system',
         content: `You are a medical context evaluator. Decide whether the provided context contains enough information to meaningfully answer the clinical question.
 
-Respond with JSON only: {"sufficient": true/false, "reason": "one sentence"}
+Respond with JSON only: {"sufficient": true/false, "partial": true/false, "missing_context": "one sentence describing what is not covered, or empty string", "reason": "one sentence"}
 
 Rules:
-- sufficient=true only if the context directly and specifically addresses the question
-- sufficient=false if context is tangential, too vague, or covers a different condition/scenario
+- sufficient=true, partial=false: context directly and fully addresses the question
+- sufficient=true, partial=true: context covers at least one major clinical aspect of the question but is missing another important aspect. Use this when context is relevant and useful but incomplete. Example: question asks about managing heart failure in a patient with severe liver cirrhosis — context covers heart failure management but not liver-specific dosing or contraindications → partial=true, missing_context="heart failure management considerations specific to liver cirrhosis"
+- sufficient=false, partial=false: context has no meaningful clinical overlap with the question at all — use this only when context is about a completely different condition or specialty
+- When in doubt between partial=true and sufficient=false, prefer partial=true if the context covers any relevant aspect of the question
 - Do NOT answer the question itself`,
       },
       {
@@ -208,11 +202,13 @@ Rules:
     const parsed = JSON.parse(response.choices[0]?.message?.content || '{}');
     return {
       sufficient: Boolean(parsed.sufficient),
+      partial: Boolean(parsed.partial),
+      missing_context: parsed.missing_context || '',
       reason: parsed.reason || '',
     };
   } catch {
     console.error('[Judge] Failed to parse response, defaulting to sufficient=true');
-    return { sufficient: true, reason: 'parse error' };
+    return { sufficient: true, partial: false, missing_context: '', reason: 'parse error' };
   }
 }
 
@@ -241,7 +237,7 @@ export async function generateAIResponse(
   knowledgeMatches: KnowledgeBaseMatch[]
 ): Promise<AIResponse> {
   const sourceMessageIds = knowledgeMatches.map((m) => m.messageId);
-  
+
 // Identify initiators: the professional who sent message_order=1 in each conversation is the questioner
   const initiatorIds = new Set<string>();
   for (const match of knowledgeMatches) {
@@ -265,6 +261,7 @@ export async function generateAIResponse(
   // Step 1: No RAG matches — skip LLM entirely
   if (!ragContext) {
     console.log('[LLM] No RAG context, returning static message');
+    console.log('SIMILARITY_THRESHOLD', process.env.SIMILARITY_THRESHOLD);
     return {
       content: NO_CONTEXT_MESSAGE,
       source: 'anthropic',
@@ -278,9 +275,9 @@ export async function generateAIResponse(
   // Step 2: Judge — is the context sufficient to answer?
   console.log('[LLM] Step 1: Calling judge (gpt-4o)...');
   const judgeResult = await judgeContextSufficiency(ragContext, question);
-  console.log(`[LLM] Judge result: sufficient=${judgeResult.sufficient}, reason="${judgeResult.reason}"`);
+  console.log(`[LLM] Judge result: sufficient=${judgeResult.sufficient}, partial=${judgeResult.partial}, missing="${judgeResult.missing_context}", reason="${judgeResult.reason}"`);
 
-  if (!judgeResult.sufficient) {
+  if (!judgeResult.sufficient && !judgeResult.partial) {
     return {
       content: INSUFFICIENT_CONTEXT_MESSAGE,
       source: 'anthropic',
@@ -291,9 +288,12 @@ export async function generateAIResponse(
     };
   }
 
-  // Step 3: Context is sufficient — generate answer with Anthropic
-  console.log('[LLM] Step 2: Calling Anthropic for answer...');
-  const content = await generateWithAnthropic(question, ragContext);
+  // Step 3: Context is sufficient or partial — generate answer with Anthropic
+  console.log(`[LLM] Step 2: Calling Anthropic for answer (partial=${judgeResult.partial})...`);
+  const partialNote = judgeResult.partial && judgeResult.missing_context
+    ? `\n\n<partial_context_note>The available context does not cover: ${judgeResult.missing_context}. Explicitly mention this gap and suggest waiting for a colleague to respond.</partial_context_note>`
+    : '';
+  const content = await generateWithAnthropic(question, ragContext + partialNote);
   console.log('[LLM] Anthropic response received, length:', content.length);
 
   return {

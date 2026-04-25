@@ -9,6 +9,7 @@ export interface Question {
   created_at: string;
   updated_at: string;
   answer_count?: number;
+  has_human_answer?: boolean;
 }
 
 export interface Expert {
@@ -30,8 +31,6 @@ export interface Answer {
   source_message_ids?: string[];
   expert_ids?: string[];
   experts?: Expert[];
-  upvotes: number;
-  downvotes: number;
   created_at: string;
 }
 
@@ -70,8 +69,3 @@ export interface CreateQuestionResponse {
   knowledgeMatchesCount: number;
 }
 
-export interface VoteResponse {
-  message: string;
-  upvotes: number;
-  downvotes: number;
-}
