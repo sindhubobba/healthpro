@@ -38,7 +38,7 @@ export default function QuestionCard({ question }: QuestionCardProps) {
             </svg>
             {question.answer_count || 0} answers
           </span>
-          {(question.answer_count ?? 0) > 0 && question.has_human_answer === false && (
+          {!question.has_human_answer && (question.answer_count ?? 0) > 0 && (
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
               <svg
                 className="w-3 h-3 mr-1"

@@ -180,9 +180,14 @@ export default function QuestionDetail() {
       </div>
 
       {/* Add Answer Form */}
-      {!isQuestionOwner && (
+      {!user && (
+        <div className="bg-white rounded-lg shadow-sm border p-6 text-center text-gray-500">
+          <Link href="/login" className="text-blue-600 hover:underline font-medium">Sign in</Link> to post an answer.
+        </div>
+      )}
+      {user && !isQuestionOwner && (
         <div className="bg-white rounded-lg shadow-sm border p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Answer</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Post an Answer</h3>
           <form onSubmit={handleSubmitAnswer} className="space-y-4">
             {submitError && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-600 text-sm">

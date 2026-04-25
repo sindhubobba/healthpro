@@ -10,6 +10,7 @@ export interface Question {
   updated_at: string;
   answer_count?: number;
   has_human_answer?: boolean;
+  has_kb_answer?: boolean;
 }
 
 export interface Expert {

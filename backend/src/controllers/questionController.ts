@@ -48,8 +48,12 @@ export async function listQuestions(
         (SELECT COUNT(*) FROM answers WHERE question_id = q.id) as answer_count,
         (SELECT EXISTS (
           SELECT 1 FROM answers
-          WHERE question_id = q.id AND is_ai_generated = false
-        )) as has_human_answer
+          WHERE question_id = q.id AND is_ai_generated = false AND ai_source IS NULL
+        )) as has_human_answer,
+        (SELECT EXISTS (
+          SELECT 1 FROM answers
+          WHERE question_id = q.id AND is_ai_generated = true
+        )) as has_kb_answer
        FROM questions q
        ORDER BY q.created_at DESC
        LIMIT $1 OFFSET $2`,
