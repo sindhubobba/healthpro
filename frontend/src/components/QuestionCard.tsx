@@ -26,7 +26,6 @@ export default function QuestionCard({ question }: QuestionCardProps) {
         <span className={styles.date}>{formattedDate}</span>
       </div>
 
-      <h2 className={styles.title}>{question.title}</h2>
       <p className={styles.body}>{question.content}</p>
 
       <div className={styles.footer}>

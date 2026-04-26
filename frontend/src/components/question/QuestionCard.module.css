@@ -29,16 +29,6 @@
   color: var(--ink5);
 }
 
-.title {
-  font-family: var(--display);
-  font-size: 24px;
-  font-weight: 400;
-  color: var(--ink);
-  line-height: 1.3;
-  letter-spacing: -0.01em;
-  margin-bottom: 16px;
-}
-
 .asker {
   display: flex;
   align-items: center;

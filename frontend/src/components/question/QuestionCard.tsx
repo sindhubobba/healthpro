@@ -3,7 +3,6 @@ import Avatar from '@/components/shared/Avatar';
 import styles from './QuestionCard.module.css';
 
 interface QuestionCardProps {
-  title: string;
   body: string;
   specialty?: string | null;
   createdAt: string;
@@ -19,7 +18,6 @@ function formatTimestamp(iso: string): string {
 }
 
 export default function QuestionCard({
-  title,
   body,
   specialty,
   createdAt,
@@ -35,8 +33,6 @@ export default function QuestionCard({
         {specialty && <span className={styles.dot} aria-hidden="true" />}
         <span className={styles.time}>{formatTimestamp(createdAt)}</span>
       </div>
-
-      <h1 className={styles.title}>{title}</h1>
 
       <div className={styles.asker}>
         <Avatar name={authorName} tone="sage" size={34} />

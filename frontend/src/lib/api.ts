@@ -32,15 +32,14 @@ export async function getQuestion(id: string): Promise<QuestionDetailResponse> {
 }
 
 export async function createQuestion(
-  title: string,
-  content: string,
+  text: string,
   authorName?: string,
   tags?: string[]
 ): Promise<CreateQuestionResponse> {
   return fetchApi<CreateQuestionResponse>('/api/questions', {
     method: 'POST',
     credentials: 'include',
-    body: JSON.stringify({ title, content, authorName, tags }),
+    body: JSON.stringify({ text, authorName, tags }),
   });
 }
 

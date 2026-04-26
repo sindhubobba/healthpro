@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { getQuestion, createAnswer } from '@/lib/api';
+import { getQuestion, createAnswer, deleteQuestion } from '@/lib/api';
 import { Question, Answer } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 import QuestionCard from '@/components/question/QuestionCard';
@@ -15,6 +15,7 @@ import styles from './page.module.css';
 
 export default function QuestionDetail() {
   const params = useParams();
+  const router = useRouter();
   const id = params.id as string;
   const { user } = useAuth();
 
@@ -22,6 +23,7 @@ export default function QuestionDetail() {
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const [answerContent, setAnswerContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -42,6 +44,18 @@ export default function QuestionDetail() {
     }
     fetchQuestion();
   }, [id]);
+
+  const handleDelete = async () => {
+    if (!confirm('Delete this question? All responses will also be removed.')) return;
+    setIsDeleting(true);
+    try {
+      await deleteQuestion(id);
+      router.push('/questions');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete question');
+      setIsDeleting(false);
+    }
+  };
 
   const handleSubmitAnswer = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,16 +102,27 @@ export default function QuestionDetail() {
 
   return (
     <div className={styles.shell}>
-      <Link href="/questions" className={`${styles.back} reveal d1`}>
-        <svg viewBox="0 0 14 14" aria-hidden="true">
-          <path d="M9 2L4 7l5 5" />
-        </svg>
-        Back to questions
-      </Link>
+      <div className={`${styles.headerRow} reveal d1`}>
+        <Link href="/questions" className={styles.back}>
+          <svg viewBox="0 0 14 14" aria-hidden="true">
+            <path d="M9 2L4 7l5 5" />
+          </svg>
+          Back to questions
+        </Link>
+        {isQuestionOwner && (
+          <button
+            type="button"
+            onClick={handleDelete}
+            disabled={isDeleting}
+            className={styles.deleteBtn}
+          >
+            {isDeleting ? 'Deleting…' : 'Delete'}
+          </button>
+        )}
+      </div>
 
       <div className="reveal d2">
         <QuestionCard
-          title={question.title}
           body={question.content}
           specialty={specialty}
           createdAt={question.created_at}
@@ -108,7 +133,7 @@ export default function QuestionDetail() {
       {!hasHumanAnswer && (
         <div className={`${styles.spacer} reveal d3`}>
           <NotificationPill>
-            A specialist has been notified and will respond directly.
+          This question has AI-generated responses only. No human expert has answered yet.
           </NotificationPill>
         </div>
       )}

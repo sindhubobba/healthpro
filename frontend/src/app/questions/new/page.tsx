@@ -62,7 +62,7 @@ export default function NewQuestion() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
 
-  const [title, setTitle] = useState('');
+  const [text, setText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -82,16 +82,13 @@ export default function NewQuestion() {
     );
   }
 
-  const handleSubmit = async ({ title, content, tags }: ComposerSubmitPayload) => {
+  const handleSubmit = async ({ text, tags }: ComposerSubmitPayload) => {
     setError(null);
     setIsSubmitting(true);
     try {
-      // Author name pulled from session — the "Your Name" field is intentionally
-      // removed because the user is already authenticated.
       const authorName = user.name?.trim() || user.email;
       const result = await createQuestion(
-        title,
-        content,
+        text,
         authorName,
         tags.length > 0 ? tags : undefined,
       );
@@ -115,8 +112,8 @@ export default function NewQuestion() {
 
       <div className="reveal d2">
         <ConversationalComposer
-          title={title}
-          onTitleChange={setTitle}
+          text={text}
+          onTextChange={setText}
           onSubmit={handleSubmit}
           isSubmitting={isSubmitting}
         />
@@ -131,7 +128,7 @@ export default function NewQuestion() {
             title={s.title}
             suffix={s.suffix}
             fullQuestion={s.fullQuestion}
-            onTap={(q) => setTitle(q)}
+            onTap={(q) => setText(q)}
           />
         ))}
       </div>

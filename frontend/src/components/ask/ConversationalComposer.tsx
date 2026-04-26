@@ -4,32 +4,29 @@ import { useState, useRef, KeyboardEvent } from 'react';
 import styles from './ConversationalComposer.module.css';
 
 export interface ComposerSubmitPayload {
-  title: string;
-  content: string;
+  text: string;
   tags: string[];
 }
 
 interface ConversationalComposerProps {
-  /** Controlled value — parent owns the title so SuggestionCard taps can update it */
-  title: string;
-  onTitleChange: (next: string) => void;
+  text: string;
+  onTextChange: (next: string) => void;
   onSubmit: (payload: ComposerSubmitPayload) => void | Promise<void>;
   isSubmitting?: boolean;
 }
 
 export default function ConversationalComposer({
-  title,
-  onTitleChange,
+  text,
+  onTextChange,
   onSubmit,
   isSubmitting = false,
 }: ConversationalComposerProps) {
-  const [content, setContent] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [tagDraft, setTagDraft] = useState('');
   const [isAddingTag, setIsAddingTag] = useState(false);
   const tagInputRef = useRef<HTMLInputElement>(null);
 
-  const canSubmit = title.trim().length > 0 && content.trim().length > 0 && !isSubmitting;
+  const canSubmit = text.trim().length > 0 && !isSubmitting;
 
   const commitTag = () => {
     const t = tagDraft.trim().toLowerCase();
@@ -57,7 +54,7 @@ export default function ConversationalComposer({
   const handleSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!canSubmit) return;
-    onSubmit({ title: title.trim(), content: content.trim(), tags });
+    onSubmit({ text: text.trim(), tags });
   };
 
   const handleMainKey = (e: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -71,21 +68,12 @@ export default function ConversationalComposer({
     <form className={styles.wrap} onSubmit={handleSubmit}>
       <textarea
         className={styles.mainInput}
-        rows={1}
-        placeholder="e.g., When should I switch from metformin to a GLP-1 agonist?"
-        value={title}
-        onChange={(e) => onTitleChange(e.target.value)}
+        rows={3}
+        placeholder="Ask like you're texting a colleague — include patient context, what you've tried, and what you need to know."
+        value={text}
+        onChange={(e) => onTextChange(e.target.value)}
         onKeyDown={handleMainKey}
         aria-label="Question"
-      />
-      <textarea
-        className={styles.detailInput}
-        rows={2}
-        placeholder="Add clinical context — patient details, specific concerns, what you've already considered…"
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
-        onKeyDown={handleMainKey}
-        aria-label="Clinical context"
       />
 
       <div className={styles.bottom}>
