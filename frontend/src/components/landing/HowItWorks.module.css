@@ -1,0 +1,81 @@
+.section { padding: 80px 0; }
+@media (max-width: 700px) { .section { padding: 52px 0; } }
+
+.header {
+  text-align: center;
+  margin-bottom: 52px;
+}
+
+.eyebrow {
+  font-family: var(--body);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--sage);
+  margin-bottom: 12px;
+}
+
+.title {
+  font-family: var(--display);
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  line-height: 1.2;
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+}
+@media (max-width: 700px) {
+  .steps { grid-template-columns: 1fr; gap: 24px; }
+}
+
+.step {
+  text-align: center;
+  padding: 32px 24px;
+  background: var(--surface);
+  border-radius: var(--r2);
+  border: 1px solid rgba(30, 37, 30, 0.05);
+  transition: transform 0.35s var(--ease-smooth), box-shadow 0.35s;
+}
+.step:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 18px 48px rgba(30, 37, 30, 0.06);
+}
+
+.number {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--display);
+  font-size: 18px;
+  font-weight: 400;
+  margin: 0 auto 18px;
+}
+
+/* Each step gets a different accent color in numerical order */
+.step:nth-child(1) .number { background: var(--sage-soft);   color: var(--sage); }
+.step:nth-child(2) .number { background: var(--teal-soft);   color: var(--teal); }
+.step:nth-child(3) .number { background: var(--copper-soft); color: var(--copper); }
+
+.stepTitle {
+  font-family: var(--display);
+  font-size: 20px;
+  font-weight: 400;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+
+.stepDesc {
+  font-family: var(--body);
+  font-size: 14px;
+  color: var(--ink4);
+  line-height: 1.55;
+}

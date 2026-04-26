@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HealthPro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,300;1,6..72,400&family=Epilogue:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#f6f7f3;
+  --bg2:#eef0e9;
+  --bg3:#e4e7de;
+  --bg4:#d6d9cf;
+  --white:#fafbf7;
+  --ink:#1e251e;
+  --ink2:#374037;
+  --ink3:#5b665b;
+  --ink4:#8a948a;
+  --ink5:#b3bab3;
+  --sage:#6b7f5e;
+  --sage-soft:rgba(107,127,94,0.09);
+  --sage-mid:rgba(107,127,94,0.17);
+  --sage-deep:#4e6142;
+  --olive:#7a8548;
+  --olive-soft:rgba(122,133,72,0.09);
+  --olive-mid:rgba(122,133,72,0.16);
+  --copper:#b87741;
+  --copper-soft:rgba(184,119,65,0.08);
+  --copper-mid:rgba(184,119,65,0.16);
+  --copper-deep:#9a6335;
+  --teal:#3a8578;
+  --teal-soft:rgba(58,133,120,0.08);
+  --teal-mid:rgba(58,133,120,0.15);
+  --display:'Newsreader',Georgia,serif;
+  --body:'Epilogue',system-ui,sans-serif;
+  --r:12px;
+  --r2:20px;
+  --r3:28px;
+  --r-full:999px;
+}
+
+html{scroll-behavior:smooth}
+body{font-family:var(--body);background:var(--bg);color:var(--ink);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+
+.container{max-width:1100px;margin:0 auto;padding:0 24px}
+@media(max-width:600px){.container{padding:0 18px}}
+
+/* ============= NAV ============= */
+.nav{position:sticky;top:0;z-index:100;background:rgba(246,247,243,0.88);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid rgba(30,37,30,0.06)}
+.nav-inner{display:flex;align-items:center;justify-content:space-between;height:64px}
+.nav-logo{display:flex;align-items:center;gap:10px;cursor:pointer}
+.nav-mark{width:32px;height:32px;border-radius:10px;background:var(--sage);display:flex;align-items:center;justify-content:center}
+.nav-mark svg{width:16px;height:16px}
+.nav-word{font-family:var(--display);font-size:20px;font-weight:500;letter-spacing:-0.03em;color:var(--ink)}
+.nav-links{display:flex;align-items:center;gap:28px}
+.nav-link{font-size:14px;color:var(--ink3);font-weight:500;cursor:pointer;transition:color 0.2s;position:relative}
+.nav-link:hover{color:var(--ink)}
+.nav-link::after{content:'';position:absolute;left:0;right:0;bottom:-3px;height:2px;background:var(--sage);border-radius:1px;transform:scaleX(0);transition:transform 0.25s cubic-bezier(0.16,1,0.3,1)}
+.nav-link:hover::after{transform:scaleX(1)}
+.nav-cta{background:var(--ink);color:var(--bg);border:none;border-radius:var(--r-full);padding:10px 22px;font-size:13px;font-weight:600;font-family:var(--body);cursor:pointer;transition:transform 0.15s,background 0.2s}
+.nav-cta:hover{background:var(--ink2)}
+.nav-cta:active{transform:scale(0.97)}
+@media(max-width:700px){.nav-links{gap:16px}.nav-link{display:none}.nav-cta{padding:8px 18px;font-size:12px}}
+
+/* ============= HERO ============= */
+.hero{padding:80px 0 60px;position:relative;overflow:hidden}
+@media(max-width:700px){.hero{padding:48px 0 40px}}
+.hero-grid{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center}
+@media(max-width:800px){.hero-grid{grid-template-columns:1fr;gap:36px;text-align:center}}
+.hero-eyebrow{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;color:var(--sage);margin-bottom:16px}
+.hero-title{font-family:var(--display);font-size:clamp(36px,5vw,56px);font-weight:300;line-height:1.15;letter-spacing:-0.03em;color:var(--ink);margin-bottom:20px}
+.hero-title em{font-style:italic;color:var(--sage-deep);font-weight:400}
+.hero-sub{font-size:17px;color:var(--ink3);line-height:1.6;max-width:440px;margin-bottom:32px}
+@media(max-width:800px){.hero-sub{max-width:100%;margin:0 auto 32px}}
+.hero-actions{display:flex;gap:14px;flex-wrap:wrap}
+@media(max-width:800px){.hero-actions{justify-content:center}}
+.btn-lg{border-radius:var(--r-full);padding:14px 32px;font-size:15px;font-weight:600;font-family:var(--body);cursor:pointer;transition:all 0.2s;border:none}
+.btn-lg:active{transform:scale(0.97)}
+.btn-fill{background:var(--sage);color:white}
+.btn-fill:hover{background:var(--sage-deep)}
+.btn-outline{background:none;border:1.5px solid var(--bg4);color:var(--ink2)}
+.btn-outline:hover{border-color:var(--ink5);background:rgba(107,127,94,0.04)}
+.hero-proof{display:flex;align-items:center;gap:12px;margin-top:28px}
+@media(max-width:800px){.hero-proof{justify-content:center}}
+.avatar-stack{display:flex}
+.avatar-stack .av{width:32px;height:32px;border-radius:50%;border:2px solid var(--bg);margin-left:-8px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:white}
+.avatar-stack .av:first-child{margin-left:0}
+.hero-proof-text{font-size:13px;color:var(--ink4)}
+.hero-proof-text strong{color:var(--ink3);font-weight:600}
+
+.hero-visual{position:relative}
+@media(max-width:800px){.hero-visual{display:flex;justify-content:center}}
+.hero-mockup{width:100%;max-width:420px;background:var(--white);border-radius:var(--r2);border:1px solid rgba(30,37,30,0.07);overflow:hidden;box-shadow:0 24px 80px rgba(30,37,30,0.06),0 2px 8px rgba(30,37,30,0.03)}
+.hero-mockup-header{padding:16px 20px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(30,37,30,0.05)}
+.hm-dots{display:flex;gap:6px}
+.hm-dot{width:8px;height:8px;border-radius:50%;background:var(--bg3)}
+.hm-bar{flex:1;height:8px;border-radius:4px;background:var(--bg2);margin-left:12px}
+.hero-mockup-body{padding:20px}
+.hm-q{font-family:var(--display);font-size:16px;font-weight:400;color:var(--ink);line-height:1.4;margin-bottom:16px;font-style:italic}
+.hm-reply{background:var(--bg);border-radius:var(--r);padding:14px 16px;margin-bottom:12px}
+.hm-reply-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.hm-reply-dot{width:8px;height:8px;border-radius:50%;background:var(--teal);opacity:0.7}
+.hm-reply-label{font-size:11px;font-weight:600;color:var(--teal);text-transform:uppercase;letter-spacing:0.08em}
+.hm-reply-text{font-size:13px;color:var(--ink3);line-height:1.55}
+.hm-source{display:flex;align-items:center;gap:8px;margin-top:12px}
+.hm-source-av{width:22px;height:22px;border-radius:50%;background:var(--sage-soft);display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:var(--sage)}
+.hm-source-text{font-size:11px;color:var(--ink4)}
+
+.hero-float{position:absolute;pointer-events:none;border-radius:50%}
+.float-1{top:-20px;right:-30px;width:120px;height:120px;background:var(--sage-soft);animation:floatA 9s ease-in-out infinite}
+.float-2{bottom:20px;left:-40px;width:80px;height:80px;background:var(--copper-soft);animation:floatB 11s ease-in-out infinite}
+.float-3{top:50%;right:40%;width:60px;height:60px;background:var(--olive-soft);animation:floatC 13s ease-in-out infinite}
+@keyframes floatA{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-14px,20px) scale(1.05)}}
+@keyframes floatB{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(12px,-16px) scale(1.08)}}
+@keyframes floatC{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-8px,12px) scale(0.95)}}
+
+/* ============= HOW IT WORKS ============= */
+.section{padding:80px 0}
+@media(max-width:700px){.section{padding:52px 0}}
+.section-header{text-align:center;margin-bottom:52px}
+.section-eyebrow{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;color:var(--sage);margin-bottom:12px}
+.section-title{font-family:var(--display);font-size:clamp(28px,4vw,40px);font-weight:300;letter-spacing:-0.02em;color:var(--ink);line-height:1.2}
+
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:32px}
+@media(max-width:700px){.steps{grid-template-columns:1fr;gap:24px}}
+.step{text-align:center;padding:32px 24px;background:var(--white);border-radius:var(--r2);border:1px solid rgba(30,37,30,0.05);transition:transform 0.35s cubic-bezier(0.16,1,0.3,1),box-shadow 0.35s}
+.step:hover{transform:translateY(-5px);box-shadow:0 18px 48px rgba(30,37,30,0.06)}
+.step-number{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:18px;font-weight:400;margin:0 auto 18px}
+.step:nth-child(1) .step-number{background:var(--sage-soft);color:var(--sage)}
+.step:nth-child(2) .step-number{background:var(--teal-soft);color:var(--teal)}
+.step:nth-child(3) .step-number{background:var(--copper-soft);color:var(--copper)}
+.step-title{font-family:var(--display);font-size:20px;font-weight:400;color:var(--ink);margin-bottom:8px}
+.step-desc{font-size:14px;color:var(--ink4);line-height:1.55}
+
+/* ============= CTA BAND ============= */
+.cta-band{background:var(--ink);border-radius:var(--r3);padding:56px 40px;text-align:center;margin:0 24px 80px;position:relative;overflow:hidden}
+@media(max-width:700px){.cta-band{padding:40px 24px;margin:0 18px 52px;border-radius:var(--r2)}}
+.cta-band::before{content:'';position:absolute;top:-50px;right:-50px;width:160px;height:160px;border-radius:50%;background:rgba(107,127,94,0.12);pointer-events:none}
+.cta-band::after{content:'';position:absolute;bottom:-30px;left:-30px;width:100px;height:100px;border-radius:50%;background:rgba(184,119,65,0.1);pointer-events:none}
+.cta-title{font-family:var(--display);font-size:clamp(24px,3.5vw,36px);font-weight:300;color:var(--white);letter-spacing:-0.02em;margin-bottom:12px;line-height:1.25;position:relative}
+.cta-sub{font-size:15px;color:var(--ink5);margin-bottom:28px;max-width:440px;margin-left:auto;margin-right:auto;position:relative}
+.cta-btn{background:var(--sage);color:white;border:none;border-radius:var(--r-full);padding:14px 32px;font-size:15px;font-weight:600;font-family:var(--body);cursor:pointer;transition:all 0.2s;position:relative}
+.cta-btn:hover{background:var(--sage-deep)}
+.cta-btn:active{transform:scale(0.97)}
+
+/* ============= SEPARATOR ============= */
+.sep{border:none;border-top:1px solid rgba(30,37,30,0.06);margin:0}
+
+/* ============= SCREEN SWITCHING ============= */
+.app-screen{display:none}
+.app-screen.on{display:block;animation:fadeIn 0.4s cubic-bezier(0.16,1,0.3,1) both}
+@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* ============= SWITCHER BAR ============= */
+.switcher{position:sticky;bottom:16px;z-index:200;display:flex;justify-content:center;padding:0 24px;pointer-events:none}
+.switcher-bar{display:inline-flex;gap:4px;background:var(--ink);border-radius:var(--r-full);padding:5px;pointer-events:auto;box-shadow:0 8px 32px rgba(30,37,30,0.18)}
+.sw-btn{border:none;border-radius:var(--r-full);padding:10px 18px;font-size:12px;font-weight:600;font-family:var(--body);cursor:pointer;transition:all 0.2s;color:var(--ink5);background:none;white-space:nowrap}
+.sw-btn:hover{color:var(--white)}
+.sw-btn.on{background:var(--sage);color:white}
+
+/* ============= APP — CONVERSATIONAL ASK ============= */
+.app-ask{max-width:680px;margin:0 auto;padding:60px 24px 100px}
+@media(max-width:700px){.app-ask{padding:32px 18px 100px}}
+.ask-hero-text{text-align:center;margin-bottom:40px}
+.ask-h{font-family:var(--display);font-size:clamp(28px,4vw,38px);font-weight:300;color:var(--ink);letter-spacing:-0.02em;margin-bottom:8px;line-height:1.2}
+.ask-h em{font-style:italic;color:var(--sage-deep)}
+.ask-p{font-size:15px;color:var(--ink4)}
+
+.conv-input-wrap{background:var(--white);border:1.5px solid var(--bg3);border-radius:var(--r2);padding:6px;transition:border-color 0.25s,box-shadow 0.25s}
+.conv-input-wrap:focus-within{border-color:var(--sage);box-shadow:0 0 0 4px var(--sage-soft)}
+.conv-main-input{width:100%;border:none;background:none;padding:16px 18px 8px;font-size:17px;font-family:var(--display);font-weight:400;color:var(--ink);outline:none;resize:none;min-height:60px;line-height:1.45}
+.conv-main-input::placeholder{color:var(--ink5);font-style:italic}
+.conv-detail-input{width:100%;border:none;background:none;padding:4px 18px 14px;font-size:14px;font-family:var(--body);color:var(--ink3);outline:none;resize:none;min-height:48px;line-height:1.5}
+.conv-detail-input::placeholder{color:var(--bg4)}
+.conv-bottom{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-top:1px solid rgba(30,37,30,0.05)}
+.conv-tags{display:flex;gap:6px;flex-wrap:wrap;flex:1}
+.conv-tag{display:inline-flex;align-items:center;gap:5px;background:var(--sage-soft);border-radius:var(--r-full);padding:5px 12px;font-size:12px;font-weight:500;color:var(--sage);cursor:pointer;transition:background 0.15s}
+.conv-tag:hover{background:var(--sage-mid)}
+.conv-tag-add{background:var(--bg2);color:var(--ink4)}
+.conv-tag-add:hover{background:var(--bg3);color:var(--ink3)}
+.conv-send{width:40px;height:40px;border-radius:50%;background:var(--sage);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.15s,transform 0.12s;flex-shrink:0;margin-left:10px}
+.conv-send:hover{background:var(--sage-deep)}
+.conv-send:active{transform:scale(0.92)}
+.conv-send svg{width:16px;height:16px}
+
+.conv-hints{display:flex;flex-direction:column;gap:8px;margin-top:20px}
+.conv-hint{display:flex;align-items:center;gap:12px;background:var(--white);border:1px solid rgba(30,37,30,0.05);border-radius:var(--r);padding:14px 18px;cursor:pointer;transition:border-color 0.2s,transform 0.2s cubic-bezier(0.16,1,0.3,1),box-shadow 0.2s}
+.conv-hint:hover{border-color:var(--bg4);transform:translateX(5px);box-shadow:0 4px 16px rgba(30,37,30,0.04)}
+.conv-hint:active{transform:scale(0.99)}
+.conv-hint-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.conv-hint-icon svg{width:16px;height:16px;stroke-width:1.5;fill:none}
+.ch-sage{background:var(--sage-soft)}.ch-sage svg{stroke:var(--sage)}
+.ch-copper{background:var(--copper-soft)}.ch-copper svg{stroke:var(--copper)}
+.ch-teal{background:var(--teal-soft)}.ch-teal svg{stroke:var(--teal)}
+.conv-hint-text{font-size:14px;color:var(--ink3);line-height:1.4}
+.conv-hint-text strong{color:var(--ink2);font-weight:500}
+.conv-hint-arrow{margin-left:auto;color:var(--ink5);font-size:16px;transition:color 0.15s,transform 0.15s}
+.conv-hint:hover .conv-hint-arrow{color:var(--sage);transform:translateX(3px)}
+
+.conv-footer{text-align:center;margin-top:24px;font-size:12px;color:var(--ink5)}
+
+/* ============= APP — QUESTION DETAIL ============= */
+.app-detail{max-width:680px;margin:0 auto;padding:32px 24px 100px}
+@media(max-width:700px){.app-detail{padding:20px 18px 100px}}
+.detail-back{display:inline-flex;align-items:center;gap:6px;font-size:14px;color:var(--ink4);cursor:pointer;margin-bottom:24px;font-weight:500;transition:color 0.15s}
+.detail-back:hover{color:var(--ink)}
+.detail-back svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2}
+
+.detail-card{background:var(--white);border-radius:var(--r2);border:1px solid rgba(30,37,30,0.06);padding:28px;margin-bottom:20px;transition:box-shadow 0.3s}
+.detail-card:hover{box-shadow:0 8px 32px rgba(30,37,30,0.04)}
+.dc-meta{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.dc-spec{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;padding:4px 12px;border-radius:var(--r-full)}
+.spec-c{color:var(--copper);background:var(--copper-soft)}
+.spec-e{color:var(--sage);background:var(--sage-soft)}
+.spec-p{color:var(--teal);background:var(--teal-soft)}
+.dc-dot{width:3px;height:3px;border-radius:50%;background:var(--ink5)}
+.dc-time{font-size:12px;color:var(--ink5)}
+.dc-title{font-family:var(--display);font-size:24px;font-weight:400;color:var(--ink);line-height:1.3;letter-spacing:-0.01em;margin-bottom:16px}
+.dc-asker{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+.dc-av{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.dc-av-sage{background:var(--sage-soft);color:var(--sage)}
+.dc-name{font-size:14px;font-weight:500;color:var(--ink2)}
+.dc-creds{font-size:12px;color:var(--ink5)}
+.dc-body{font-size:15px;color:var(--ink3);line-height:1.65;border-top:1px solid rgba(30,37,30,0.05);padding-top:16px}
+
+.alert-pill{display:flex;align-items:center;gap:10px;background:var(--olive-soft);border-radius:var(--r);padding:14px 18px;margin-bottom:20px;font-size:13px;color:var(--olive)}
+.alert-pill svg{width:16px;height:16px;stroke:var(--olive);fill:none;stroke-width:1.5;flex-shrink:0}
+
+.responses-label{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;color:var(--ink5);margin-bottom:16px}
+
+.ai-resp{background:var(--white);border-radius:var(--r2);border:1px solid rgba(30,37,30,0.06);overflow:hidden;margin-bottom:14px;transition:box-shadow 0.3s}
+.ai-resp:hover{box-shadow:0 8px 32px rgba(30,37,30,0.04)}
+.ai-resp-head{display:flex;align-items:center;justify-content:space-between;padding:14px 22px;background:var(--teal-soft);border-bottom:1px solid rgba(58,133,120,0.1)}
+.ai-resp-tag{display:flex;align-items:center;gap:8px}
+.ai-dot-live{width:8px;height:8px;border-radius:50%;background:var(--teal);position:relative}
+.ai-dot-live::after{content:'';position:absolute;inset:-5px;border-radius:50%;border:1.5px solid var(--teal);opacity:0;animation:ringPulse 2.8s ease-out infinite}
+@keyframes ringPulse{0%{opacity:0.45;transform:scale(1)}100%{opacity:0;transform:scale(1.7)}}
+.ai-resp-label{font-size:12px;font-weight:600;color:var(--teal);letter-spacing:0.02em}
+.ai-resp-instant{font-size:11px;color:var(--ink5)}
+.ai-resp-body{padding:22px}
+.ai-prose{font-size:15px;color:var(--ink2);line-height:1.7}
+.ai-prose p{margin-bottom:14px}
+.ai-prose p:last-child{margin-bottom:0}
+.ai-sources-bar{padding:16px 22px;border-top:1px solid rgba(30,37,30,0.05)}
+.ai-src-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--ink5);margin-bottom:10px}
+.ai-src-chips{display:flex;gap:8px;flex-wrap:wrap}
+.ai-src-chip{display:inline-flex;align-items:center;gap:8px;background:var(--bg);border-radius:var(--r);padding:8px 14px;font-size:12px;color:var(--ink3);transition:background 0.15s}
+.ai-src-chip:hover{background:var(--bg2)}
+.ai-src-dot{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700}
+.ai-src-dot-f{background:var(--sage-soft);color:var(--sage)}
+.ai-src-dot-t{background:var(--copper-soft);color:var(--copper)}
+.ai-fb{display:flex;align-items:center;gap:10px;padding:14px 22px;border-top:1px solid rgba(30,37,30,0.05)}
+.ai-fb-q{font-size:13px;color:var(--ink4);margin-right:auto}
+.ai-fb-btn{background:var(--bg);border:1px solid rgba(30,37,30,0.07);border-radius:var(--r);padding:8px 16px;font-size:13px;font-weight:500;color:var(--ink3);cursor:pointer;font-family:var(--body);transition:all 0.15s}
+.ai-fb-btn:hover{border-color:var(--teal-mid);color:var(--teal);background:var(--teal-soft)}
+.ai-fb-btn:active{transform:scale(0.97)}
+
+.await-block{background:var(--white);border:1.5px dashed var(--bg4);border-radius:var(--r2);padding:32px;text-align:center}
+.await-spinner{width:44px;height:44px;border-radius:50%;background:var(--bg2);margin:0 auto 14px;display:flex;align-items:center;justify-content:center;animation:spinSlow 18s linear infinite}
+@keyframes spinSlow{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+.await-spinner svg{width:18px;height:18px;stroke:var(--ink4);fill:none;stroke-width:1.5}
+.await-title{font-size:15px;font-weight:500;color:var(--ink2);margin-bottom:4px}
+.await-sub{font-size:13px;color:var(--ink5);max-width:300px;margin:0 auto}
+
+/* ============= FOOTER ============= */
+.footer{padding:48px 0;text-align:center;font-size:12px;color:var(--ink5);border-top:1px solid rgba(30,37,30,0.05)}
+
+/* ============= LOAD ANIMATIONS ============= */
+.reveal{opacity:0;transform:translateY(18px);animation:revealUp 0.55s cubic-bezier(0.16,1,0.3,1) forwards}
+.d1{animation-delay:0.08s}
+.d2{animation-delay:0.18s}
+.d3{animation-delay:0.28s}
+.d4{animation-delay:0.38s}
+.d5{animation-delay:0.48s}
+@keyframes revealUp{to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+
+<!-- ============= NAV ============= -->
+<nav class="nav">
+  <div class="container nav-inner">
+    <div class="nav-logo" onclick="showScreen('landing')">
+      <div class="nav-mark"><svg viewBox="0 0 16 16" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg></div>
+      <span class="nav-word">HealthPro</span>
+    </div>
+    <div class="nav-links">
+      <span class="nav-link" onclick="showScreen('landing')">Home</span>
+      <span class="nav-link" onclick="showScreen('ask')">Ask</span>
+      <span class="nav-link" onclick="showScreen('detail')">Questions</span>
+      <button class="nav-cta" onclick="showScreen('ask')">Get started</button>
+    </div>
+  </div>
+</nav>
+
+<!-- ============= LANDING PAGE ============= -->
+<div class="app-screen on" id="s-landing">
+
+  <section class="hero">
+    <div class="container">
+      <div class="hero-grid">
+        <div class="reveal d1">
+          <div class="hero-eyebrow">For physicians, by physicians</div>
+          <h1 class="hero-title">The knowledge your peers already <em>shared</em></h1>
+          <p class="hero-sub">HealthPro turns doctor-to-doctor consultations into a searchable knowledge base. Ask a clinical question, get instant answers sourced from real specialist discussions.</p>
+          <div class="hero-actions">
+            <button class="btn-lg btn-fill" onclick="showScreen('ask')">Ask your first question</button>
+            <button class="btn-lg btn-outline" onclick="showScreen('detail')">See how it works</button>
+          </div>
+          <div class="hero-proof">
+            <div class="avatar-stack">
+              <div class="av" style="background:var(--sage)">MT</div>
+              <div class="av" style="background:var(--copper)">JR</div>
+              <div class="av" style="background:var(--teal)">AP</div>
+              <div class="av" style="background:var(--ink3)">SN</div>
+            </div>
+            <div class="hero-proof-text"><strong>2,400+</strong> physicians in the network</div>
+          </div>
+        </div>
+
+        <div class="hero-visual reveal d3">
+          <div class="hero-float float-1"></div>
+          <div class="hero-float float-2"></div>
+          <div class="hero-float float-3"></div>
+          <div class="hero-mockup">
+            <div class="hero-mockup-header">
+              <div class="hm-dots"><div class="hm-dot"></div><div class="hm-dot"></div><div class="hm-dot"></div></div>
+              <div class="hm-bar"></div>
+            </div>
+            <div class="hero-mockup-body">
+              <div class="hm-q">"How do you manage anticoagulation for AFib in a hemodialysis patient?"</div>
+              <div class="hm-reply">
+                <div class="hm-reply-head">
+                  <div class="hm-reply-dot"></div>
+                  <span class="hm-reply-label">AI response</span>
+                </div>
+                <div class="hm-reply-text">Expert discussions indicate DOACs like apixaban are generally preferred per ACC/AHA 2023 guidelines. However, hemodialysis presents distinct considerations not covered in current conversations...</div>
+                <div class="hm-source">
+                  <div class="hm-source-av">MT</div>
+                  <span class="hm-source-text">Based on Dr. Michelle Taylor, Pulmonology</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="sep">
+
+  <section class="section">
+    <div class="container">
+      <div class="section-header reveal d1">
+        <div class="section-eyebrow">How it works</div>
+        <h2 class="section-title">Three steps to peer-sourced answers</h2>
+      </div>
+      <div class="steps">
+        <div class="step reveal d2">
+          <div class="step-number">1</div>
+          <div class="step-title">Ask anything clinical</div>
+          <div class="step-desc">Type your question naturally — no forms, no dropdowns. Just describe what you need to know the way you'd text a colleague.</div>
+        </div>
+        <div class="step reveal d3">
+          <div class="step-number">2</div>
+          <div class="step-title">Get an instant match</div>
+          <div class="step-desc">Our AI searches prior specialist conversations and surfaces an attributed answer in seconds — no hallucination, only real peer knowledge.</div>
+        </div>
+        <div class="step reveal d4">
+          <div class="step-number">3</div>
+          <div class="step-title">A specialist follows up</div>
+          <div class="step-desc">Every question is routed to the most relevant expert in the network. They respond directly, adding to the knowledge base for the next physician.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="cta-band reveal d2">
+    <div class="cta-title">Stop re-asking the same experts. <br>Start finding what they already said.</div>
+    <div class="cta-sub">Join the physician network that remembers every consultation — so you don't have to.</div>
+    <button class="cta-btn" onclick="showScreen('ask')">Get started free</button>
+  </div>
+
+  <footer class="footer">
+    <div class="container">&copy; 2026 HealthPro. Built for physicians. All peer knowledge is de-identified and HIPAA-compliant.</div>
+  </footer>
+</div>
+
+<!-- ============= CONVERSATIONAL ASK ============= -->
+<div class="app-screen" id="s-ask">
+  <div class="app-ask">
+    <div class="ask-hero-text reveal d1">
+      <h2 class="ask-h">What do you need to <em>know?</em></h2>
+      <p class="ask-p">Ask like you're texting a colleague. We'll find the answer.</p>
+    </div>
+
+    <div class="conv-input-wrap reveal d2">
+      <textarea class="conv-main-input" rows="1" placeholder="e.g., When should I switch from metformin to a GLP-1 agonist?"></textarea>
+      <textarea class="conv-detail-input" rows="2" placeholder="Add clinical context — patient details, specific concerns, what you've already considered..."></textarea>
+      <div class="conv-bottom">
+        <div class="conv-tags">
+          <span class="conv-tag">cardiology</span>
+          <span class="conv-tag">endocrinology</span>
+          <span class="conv-tag conv-tag-add">+ add tag</span>
+        </div>
+        <button class="conv-send" title="Submit">
+          <svg viewBox="0 0 16 16" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="conv-hints reveal d3">
+      <div class="conv-hint" onclick="fillQ('How do you manage anticoagulation for AFib in a hemodialysis patient?')">
+        <div class="conv-hint-icon ch-sage"><svg viewBox="0 0 16 16"><path d="M8 2a6 6 0 100 12A6 6 0 008 2z"/><path d="M10.5 6.5c-.6-.5-1.5-.8-2.5-.8s-1.9.3-2.5.8"/><path d="M6 10c.5.5 1.2.8 2 .8s1.5-.3 2-.8"/></svg></div>
+        <div class="conv-hint-text"><strong>AFib anticoagulation</strong> in hemodialysis patients</div>
+        <div class="conv-hint-arrow">&#8250;</div>
+      </div>
+      <div class="conv-hint" onclick="fillQ('What is the preferred management strategy for type 2 diabetes with CKD stage 3?')">
+        <div class="conv-hint-icon ch-copper"><svg viewBox="0 0 16 16"><path d="M4 12V8a4 4 0 018 0v4"/><path d="M2 12h12"/></svg></div>
+        <div class="conv-hint-text"><strong>T2DM management</strong> with stage 3 CKD</div>
+        <div class="conv-hint-arrow">&#8250;</div>
+      </div>
+      <div class="conv-hint" onclick="fillQ('What criteria should guide ventilator weaning after prolonged intubation?')">
+        <div class="conv-hint-icon ch-teal"><svg viewBox="0 0 16 16"><path d="M3 13V7l5-4 5 4v6"/><path d="M7 13v-3h2v3"/></svg></div>
+        <div class="conv-hint-text"><strong>Ventilator weaning</strong> after prolonged intubation</div>
+        <div class="conv-hint-arrow">&#8250;</div>
+      </div>
+    </div>
+
+    <div class="conv-footer reveal d4">Visible to verified physicians. Patient identifiers are stripped before storage.</div>
+  </div>
+</div>
+
+<!-- ============= QUESTION DETAIL ============= -->
+<div class="app-screen" id="s-detail">
+  <div class="app-detail">
+    <div class="detail-back reveal d1" onclick="showScreen('landing')">
+      <svg viewBox="0 0 14 14"><path d="M9 2L4 7l5 5"/></svg>
+      Back to questions
+    </div>
+
+    <div class="detail-card reveal d2">
+      <div class="dc-meta">
+        <span class="dc-spec spec-c">Cardiology</span>
+        <span class="dc-dot"></span>
+        <span class="dc-time">Apr 23, 2026 · 4:41 AM</span>
+      </div>
+      <h2 class="dc-title">Atrial fibrillation in a patient on hemodialysis</h2>
+      <div class="dc-asker">
+        <div class="dc-av dc-av-sage">S</div>
+        <div>
+          <div class="dc-name">Dr. Sindhu</div>
+          <div class="dc-creds">Internal Medicine · General Hospital</div>
+        </div>
+      </div>
+      <div class="dc-body">How do you manage anticoagulation for atrial fibrillation in a patient on hemodialysis? I'm particularly concerned about balancing stroke prevention with the significantly elevated bleeding risk in this population. Any experience with specific DOAC dosing or preference for warfarin in this context?</div>
+    </div>
+
+    <div class="alert-pill reveal d3">
+      <svg viewBox="0 0 16 16"><path d="M8 2a5 5 0 00-5 5v3l-1.5 2h13L13 10V7a5 5 0 00-5-5z"/><path d="M6.5 14a1.5 1.5 0 003 0"/></svg>
+      A specialist has been notified and will respond directly.
+    </div>
+
+    <div class="responses-label reveal d3">Responses</div>
+
+    <div class="ai-resp reveal d4">
+      <div class="ai-resp-head">
+        <div class="ai-resp-tag">
+          <div class="ai-dot-live"></div>
+          <span class="ai-resp-label">AI response</span>
+        </div>
+        <span class="ai-resp-instant">Instant match</span>
+      </div>
+      <div class="ai-resp-body">
+        <div class="ai-prose">
+          <p>The expert discussions on file address anticoagulation in AFib with common comorbidities such as diabetes and hypertension, where DOACs like apixaban or dabigatran are generally preferred over warfarin per ACC/AHA 2023 guidelines due to more predictable pharmacokinetics and lower intracranial bleeding risk.</p>
+          <p>However, the available conversations do not specifically address anticoagulation management in patients on hemodialysis. Altered drug clearance, elevated baseline bleeding risk from uremic platelet dysfunction, and the absence of robust RCT data for DOACs in this population make this a specialized question.</p>
+          <p>A nephrologist or cardiologist with dialysis experience will be better positioned to address your specific scenario.</p>
+        </div>
+      </div>
+      <div class="ai-sources-bar">
+        <div class="ai-src-label">Expert knowledge sources</div>
+        <div class="ai-src-chips">
+          <div class="ai-src-chip"><div class="ai-src-dot ai-src-dot-f">MT</div>Dr. Michelle Taylor, MD, FCCP</div>
+          <div class="ai-src-chip"><div class="ai-src-dot ai-src-dot-t">JR</div>Dr. James Reyes, MD</div>
+        </div>
+      </div>
+      <div class="ai-fb">
+        <span class="ai-fb-q">Was this helpful?</span>
+        <button class="ai-fb-btn" onclick="fbSel(this)">Yes</button>
+        <button class="ai-fb-btn" onclick="fbSel(this)">No</button>
+      </div>
+    </div>
+
+    <div class="await-block reveal d5">
+      <div class="await-spinner">
+        <svg viewBox="0 0 20 20"><path d="M10 3a7 7 0 100 14 7 7 0 000-14z"/><path d="M10 7v4l3 2" stroke-linecap="round"/></svg>
+      </div>
+      <div class="await-title">Awaiting specialist response</div>
+      <div class="await-sub">A nephrology or cardiology expert will respond to this question directly.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============= SCREEN SWITCHER ============= -->
+<div class="switcher">
+  <div class="switcher-bar">
+    <button class="sw-btn on" onclick="showScreen('landing')">Landing page</button>
+    <button class="sw-btn" onclick="showScreen('ask')">Ask a question</button>
+    <button class="sw-btn" onclick="showScreen('detail')">Question detail</button>
+  </div>
+</div>
+
+<script>
+function showScreen(id){
+  document.querySelectorAll('.app-screen').forEach(s=>s.classList.remove('on'));
+  const el=document.getElementById('s-'+id);
+  if(el){el.classList.add('on');el.style.animation='none';el.offsetHeight;el.style.animation=''}
+  document.querySelectorAll('.sw-btn').forEach((b,i)=>{
+    const ids=['landing','ask','detail'];
+    b.classList.toggle('on',ids[i]===id);
+  });
+  window.scrollTo({top:0,behavior:'smooth'});
+  el.querySelectorAll('.reveal').forEach(r=>{r.style.animation='none';r.offsetHeight;r.style.animation=''});
+}
+
+function fillQ(text){
+  document.querySelector('.conv-main-input').value=text;
+  document.querySelector('.conv-main-input').focus();
+}
+
+function fbSel(btn){
+  btn.parentElement.querySelectorAll('.ai-fb-btn').forEach(b=>{
+    b.style.borderColor='rgba(30,37,30,0.07)';b.style.color='var(--ink3)';b.style.background='var(--bg)';
+  });
+  btn.style.borderColor='var(--teal-mid)';btn.style.color='var(--teal)';btn.style.background='var(--teal-soft)';
+}
+</script>
+</body>
+</html>

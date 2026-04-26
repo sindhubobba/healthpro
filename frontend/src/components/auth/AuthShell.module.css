@@ -1,0 +1,59 @@
+.shell {
+  max-width: 440px;
+  margin: 0 auto;
+  padding: 60px 24px 100px;
+  font-family: var(--body);
+}
+@media (max-width: 600px) {
+  .shell { padding: 40px 18px 80px; }
+}
+
+.head {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.eyebrow {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--sage);
+  margin-bottom: 12px;
+}
+
+.title {
+  font-family: var(--display);
+  font-size: clamp(28px, 4vw, 36px);
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  line-height: 1.2;
+  margin-bottom: 8px;
+}
+.title :global(em) {
+  font-style: italic;
+  color: var(--sage-deep);
+  font-weight: 400;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: var(--ink4);
+}
+.subtitle :global(a) {
+  color: var(--sage);
+  font-weight: 500;
+  transition: color 0.15s;
+}
+.subtitle :global(a:hover) { color: var(--sage-deep); }
+
+.card {
+  background: var(--surface);
+  border: var(--border-soft);
+  border-radius: var(--r2);
+  padding: 32px;
+}
+@media (max-width: 600px) {
+  .card { padding: 24px; }
+}

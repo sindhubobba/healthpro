@@ -4,14 +4,65 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { createQuestion } from '@/lib/api';
+import ConversationalComposer, {
+  ComposerSubmitPayload,
+} from '@/components/ask/ConversationalComposer';
+import SuggestionCard from '@/components/ask/SuggestionCard';
+import styles from './page.module.css';
+
+interface Suggestion {
+  iconTone: 'sage' | 'copper' | 'teal';
+  icon: React.ReactNode;
+  title: string;
+  suffix: string;
+  fullQuestion: string;
+}
+
+const SUGGESTIONS: Suggestion[] = [
+  {
+    iconTone: 'sage',
+    icon: (
+      <svg viewBox="0 0 16 16">
+        <path d="M8 2a6 6 0 100 12A6 6 0 008 2z" />
+        <path d="M10.5 6.5c-.6-.5-1.5-.8-2.5-.8s-1.9.3-2.5.8" />
+        <path d="M6 10c.5.5 1.2.8 2 .8s1.5-.3 2-.8" />
+      </svg>
+    ),
+    title: 'AFib anticoagulation',
+    suffix: 'in hemodialysis patients',
+    fullQuestion: 'How do you manage anticoagulation for AFib in a hemodialysis patient?',
+  },
+  {
+    iconTone: 'copper',
+    icon: (
+      <svg viewBox="0 0 16 16">
+        <path d="M4 12V8a4 4 0 018 0v4" />
+        <path d="M2 12h12" />
+      </svg>
+    ),
+    title: 'T2DM management',
+    suffix: 'with stage 3 CKD',
+    fullQuestion: 'What is the preferred management strategy for type 2 diabetes with CKD stage 3?',
+  },
+  {
+    iconTone: 'teal',
+    icon: (
+      <svg viewBox="0 0 16 16">
+        <path d="M3 13V7l5-4 5 4v6" />
+        <path d="M7 13v-3h2v3" />
+      </svg>
+    ),
+    title: 'Ventilator weaning',
+    suffix: 'after prolonged intubation',
+    fullQuestion: 'What criteria should guide ventilator weaning after prolonged intubation?',
+  },
+];
 
 export default function NewQuestion() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
+
   const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
-  const [authorName, setAuthorName] = useState('');
-  const [tags, setTags] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -21,24 +72,29 @@ export default function NewQuestion() {
     }
   }, [user, authLoading, router]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  if (authLoading || !user) {
+    return (
+      <div className={styles.shell}>
+        <div className={styles.loading}>
+          {authLoading ? 'Loading…' : 'Redirecting to login…'}
+        </div>
+      </div>
+    );
+  }
+
+  const handleSubmit = async ({ title, content, tags }: ComposerSubmitPayload) => {
     setError(null);
     setIsSubmitting(true);
-
     try {
-      const tagArray = tags
-        .split(',')
-        .map((t) => t.trim())
-        .filter((t) => t.length > 0);
-
+      // Author name pulled from session — the "Your Name" field is intentionally
+      // removed because the user is already authenticated.
+      const authorName = user.name?.trim() || user.email;
       const result = await createQuestion(
         title,
         content,
-        authorName || undefined,
-        tagArray.length > 0 ? tagArray : undefined
+        authorName,
+        tags.length > 0 ? tags : undefined,
       );
-
       router.push(`/questions/${result.question.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create question');
@@ -46,147 +102,43 @@ export default function NewQuestion() {
     }
   };
 
-  if (authLoading || !user) {
-    return (
-      <div className="page-shell max-w-3xl py-12 text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-600 mx-auto" />
-        <p className="mt-4 text-slate-600">
-          {authLoading ? 'Loading...' : 'Redirecting to login...'}
-        </p>
-      </div>
-    );
-  }
-
   return (
-    <div className="page-shell max-w-3xl">
-      <h1 className="section-title mb-2">Ask a Question</h1>
-      <p className="section-subtitle mb-8">
-        Get AI-powered answers and responses from other health professionals
-      </p>
+    <div className={styles.shell}>
+      <div className={`${styles.heroText} reveal d1`}>
+        <h1 className={styles.h}>
+          What do you need to <em>know?</em>
+        </h1>
+        <p className={styles.p}>Ask like you&rsquo;re texting a colleague. We&rsquo;ll find the answer.</p>
+      </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-600 text-sm">
-            {error}
-          </div>
-        )}
+      {error && <div className={`${styles.error} reveal d2`}>{error}</div>}
 
-        <div>
-          <label htmlFor="title" className="field-label">
-            Question Title *
-          </label>
-          <input
-            type="text"
-            id="title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            required
-            className="field-input"
-            placeholder="e.g., What are the current guidelines for hypertension management in elderly patients?"
+      <div className="reveal d2">
+        <ConversationalComposer
+          title={title}
+          onTitleChange={setTitle}
+          onSubmit={handleSubmit}
+          isSubmitting={isSubmitting}
+        />
+      </div>
+
+      <div className={`${styles.hints} reveal d3`}>
+        {SUGGESTIONS.map((s) => (
+          <SuggestionCard
+            key={s.fullQuestion}
+            icon={s.icon}
+            iconTone={s.iconTone}
+            title={s.title}
+            suffix={s.suffix}
+            fullQuestion={s.fullQuestion}
+            onTap={(q) => setTitle(q)}
           />
-        </div>
+        ))}
+      </div>
 
-        <div>
-          <label htmlFor="content" className="field-label">
-            Details *
-          </label>
-          <textarea
-            id="content"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            required
-            rows={8}
-            className="field-textarea"
-            placeholder="Provide more context about your question. Include relevant patient details, clinical scenario, or specific aspects you want addressed..."
-          />
-        </div>
-
-        <div>
-          <label htmlFor="authorName" className="field-label">
-            Your Name *
-          </label>
-          <input
-            type="text"
-            id="authorName"
-            required
-            value={authorName}
-            onChange={(e) => setAuthorName(e.target.value)}
-            className="field-input"
-            placeholder="Dr. Jane Smith"
-          />
-        </div>
-
-        <div>
-          <label htmlFor="tags" className="field-label">
-            Tags (optional, comma-separated)
-          </label>
-          <input
-            type="text"
-            id="tags"
-            value={tags}
-            onChange={(e) => setTags(e.target.value)}
-            className="field-input"
-            placeholder="cardiology, hypertension, elderly"
-          />
-        </div>
-
-        <div className="bg-sky-50 border border-sky-100 rounded-lg p-4">
-          <div className="flex items-start">
-            <svg
-              className="w-5 h-5 text-sky-600 mt-0.5 mr-3"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            <p className="text-sm text-slate-700">
-            After submitting, our AI will search for relevant peer consultations in our knowledge base and 
-            provide an instant response if a match is found. Other health professionals can also contribute 
-            their expertise.
-            </p>
-          </div>
-        </div>
-
-        <button
-          type="submit"
-          disabled={isSubmitting || !title || !content || !authorName}
-          className="btn-primary w-full"
-        >
-          {isSubmitting ? (
-            <span className="flex items-center justify-center">
-              <svg
-                className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                />
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                />
-              </svg>
-              Analyzing and generating AI response...
-            </span>
-          ) : (
-            'Submit Question'
-          )}
-        </button>
-      </form>
+      <div className={`${styles.footer} reveal d4`}>
+        Visible to verified physicians. Patient identifiers are stripped before storage.
+      </div>
     </div>
   );
 }

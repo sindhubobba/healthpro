@@ -1,0 +1,13 @@
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg);
+  border-radius: var(--r);
+  padding: 8px 14px;
+  font-family: var(--body);
+  font-size: 12px;
+  color: var(--ink3);
+  transition: background 0.15s;
+}
+.chip:hover { background: var(--bg2); }
