@@ -62,7 +62,8 @@ export default function QuestionDetail() {
     setSubmitError(null);
     setIsSubmitting(true);
     try {
-      const result = await createAnswer(id, answerContent);
+      const authorName = user?.name?.trim() || user?.email;
+      const result = await createAnswer(id, answerContent, authorName);
       setAnswers((prev) => [...prev, result.answer]);
       setAnswerContent('');
     } catch (err) {
