@@ -52,7 +52,16 @@ export async function getOrCreateProfessional(message: GeneratedMessage): Promis
 export async function storeConversation(conversation: GeneratedConversation): Promise<void> {
   console.log(`  Storing conversation: ${conversation.title}`);
 
-  // Create conversation record
+  const existing = await queryOne<{ id: string }>(
+    `SELECT id FROM conversations WHERE title = $1 AND specialty = $2 LIMIT 1`,
+    [conversation.title, conversation.specialty]
+  );
+
+  if (existing) {
+    console.log(`  ↩ Skipped (already exists: ${existing.id})`);
+    return;
+  }
+
   const conv = await queryOne<{ id: string }>(
     `INSERT INTO conversations (
       title, specialty, sub_specialty, scenario_type, patient_demographics,

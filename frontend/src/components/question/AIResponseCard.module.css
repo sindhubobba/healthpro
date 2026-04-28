@@ -1,0 +1,131 @@
+.card {
+  background: var(--surface);
+  border-radius: var(--r2);
+  border: var(--border-soft);
+  overflow: hidden;
+  margin-bottom: 14px;
+  font-family: var(--body);
+  transition: box-shadow 0.3s;
+}
+.card:hover { box-shadow: var(--shadow-card-hover); }
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 22px;
+  background: var(--teal-soft);
+  border-bottom: var(--border-ai);
+}
+
+.tag {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Pulsing teal dot — ring expands from 1× to 1.7× and fades out */
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--teal);
+  position: relative;
+  display: inline-block;
+}
+.dot::after {
+  content: '';
+  position: absolute;
+  inset: -5px;
+  border-radius: 50%;
+  border: 1.5px solid var(--teal);
+  opacity: 0;
+  animation: hpRingPulse 2.8s ease-out infinite;
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--teal);
+  letter-spacing: 0.02em;
+}
+
+.instant {
+  font-size: 11px;
+  color: var(--ink5);
+}
+
+.bodyWrap { padding: 22px; }
+
+.prose {
+  font-size: 15px;
+  color: var(--ink2);
+  line-height: 1.7;
+}
+.prose p { margin-bottom: 14px; }
+.prose p:last-child { margin-bottom: 0; }
+
+.sourcesBar {
+  padding: 16px 22px;
+  border-top: var(--border-divider);
+}
+
+.sourcesLabel {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink5);
+  margin-bottom: 10px;
+}
+
+.chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.feedback {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 22px;
+  border-top: var(--border-divider);
+}
+
+.feedbackQ {
+  font-size: 13px;
+  color: var(--ink4);
+  margin-right: auto;
+}
+
+.fbBtn {
+  background: var(--bg);
+  border: 1px solid rgba(30, 37, 30, 0.07);
+  border-radius: var(--r);
+  padding: 8px 16px;
+  font-family: var(--body);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink3);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s, transform 0.1s;
+}
+.fbBtn:hover {
+  border-color: var(--teal-mid);
+  color: var(--teal);
+  background: var(--teal-soft);
+}
+.fbBtn:active { transform: scale(0.97); }
+
+.fbBtnActive {
+  border-color: var(--teal-mid);
+  color: var(--teal);
+  background: var(--teal-soft);
+}
+
+@media (max-width: 600px) {
+  .head { padding: 12px 18px; }
+  .bodyWrap { padding: 18px; }
+  .sourcesBar, .feedback { padding: 14px 18px; }
+}

@@ -1,0 +1,254 @@
+.hero {
+  padding: 80px 0 60px;
+  position: relative;
+  overflow: hidden;
+}
+@media (max-width: 700px) {
+  .hero { padding: 48px 0 40px; }
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  align-items: center;
+}
+@media (max-width: 800px) {
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 36px;
+    text-align: center;
+  }
+}
+
+.eyebrow {
+  font-family: var(--body);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--sage);
+  margin-bottom: 16px;
+}
+
+.title {
+  font-family: var(--display);
+  font-size: clamp(36px, 5vw, 56px);
+  font-weight: 300;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+  margin-bottom: 20px;
+}
+.title em {
+  font-style: italic;
+  color: var(--sage-deep);
+  font-weight: 400;
+}
+
+.sub {
+  font-family: var(--body);
+  font-size: 17px;
+  color: var(--ink3);
+  line-height: 1.6;
+  max-width: 440px;
+  margin-bottom: 32px;
+}
+@media (max-width: 800px) {
+  .sub {
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+.actions {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+@media (max-width: 800px) {
+  .actions { justify-content: center; }
+}
+
+.proof {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 28px;
+}
+@media (max-width: 800px) {
+  .proof { justify-content: center; }
+}
+
+.avatarStack { display: flex; }
+
+.av {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--bg);
+  margin-left: -8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--body);
+  font-size: 10px;
+  font-weight: 700;
+  color: white;
+}
+.av:first-child { margin-left: 0; }
+
+.proofText {
+  font-family: var(--body);
+  font-size: 13px;
+  color: var(--ink4);
+}
+.proofText strong {
+  color: var(--ink3);
+  font-weight: 600;
+}
+
+/* === Visual / mockup === */
+.visual { position: relative; }
+@media (max-width: 800px) {
+  .visual { display: flex; justify-content: center; }
+}
+
+.mockup {
+  width: 100%;
+  max-width: 420px;
+  background: var(--surface);
+  border-radius: var(--r2);
+  border: 1px solid rgba(30, 37, 30, 0.07);
+  overflow: hidden;
+  box-shadow: var(--shadow-mockup);
+  position: relative;
+}
+
+.mockupHeader {
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: var(--border-divider);
+}
+
+.mockupDots { display: flex; gap: 6px; }
+.mockupDot { width: 8px; height: 8px; border-radius: 50%; background: var(--bg3); }
+
+.mockupBar {
+  flex: 1;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--bg2);
+  margin-left: 12px;
+}
+
+.mockupBody { padding: 20px; }
+
+.mockupQ {
+  font-family: var(--display);
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--ink);
+  line-height: 1.4;
+  margin-bottom: 16px;
+  font-style: italic;
+}
+
+.mockupReply {
+  background: var(--bg);
+  border-radius: var(--r);
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+
+.mockupReplyHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.mockupReplyDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--teal);
+  opacity: 0.7;
+}
+
+.mockupReplyLabel {
+  font-family: var(--body);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--teal);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.mockupReplyText {
+  font-family: var(--body);
+  font-size: 13px;
+  color: var(--ink3);
+  line-height: 1.55;
+}
+
+.mockupSource {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.mockupSourceAv {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--sage-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--body);
+  font-size: 8px;
+  font-weight: 700;
+  color: var(--sage);
+}
+
+.mockupSourceText {
+  font-family: var(--body);
+  font-size: 11px;
+  color: var(--ink4);
+}
+
+/* === Floating decorative orbs === */
+.float {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 50%;
+}
+.float1 {
+  top: -20px;
+  right: -30px;
+  width: 120px;
+  height: 120px;
+  background: var(--sage-soft);
+  animation: hpFloatA 9s ease-in-out infinite;
+}
+.float2 {
+  bottom: 20px;
+  left: -40px;
+  width: 80px;
+  height: 80px;
+  background: var(--copper-soft);
+  animation: hpFloatB 11s ease-in-out infinite;
+}
+.float3 {
+  top: 50%;
+  right: 40%;
+  width: 60px;
+  height: 60px;
+  background: var(--olive-soft);
+  animation: hpFloatC 13s ease-in-out infinite;
+}

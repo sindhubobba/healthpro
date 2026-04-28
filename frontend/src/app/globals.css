@@ -1,39 +1,185 @@
+@import '../styles/tokens.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================
+   Base
+   ============================================================ */
 @layer base {
-  html,
-  body {
-    @apply h-full;
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  html, body {
+    height: 100%;
   }
 
   body {
-    @apply bg-slate-50 text-slate-900 antialiased;
+    font-family: var(--body);
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
   }
+
+  a { color: inherit; text-decoration: none; }
 
   ::selection {
-    @apply bg-sky-200 text-slate-900;
+    background: var(--sage-mid);
+    color: var(--ink);
+  }
+
+  /* Keyboard-only focus ring (mouse clicks don't trigger this). */
+  :focus-visible {
+    outline: 2px solid var(--sage);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  /* Inputs already render their own focus state via box-shadow/border. */
+  textarea:focus-visible,
+  input:focus-visible {
+    outline: none;
   }
 }
 
+/* ============================================================
+   Shared layout + design-system utilities
+   These mirror the prototype's class system so component code
+   stays close to the HTML reference.
+   ============================================================ */
+@layer components {
+  .hp-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+  @media (max-width: 600px) {
+    .hp-container { padding: 0 18px; }
+  }
+
+  /* Eyebrow / label text */
+  .hp-eyebrow {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--sage);
+  }
+
+  /* Buttons */
+  .hp-btn {
+    border: none;
+    cursor: pointer;
+    font-family: var(--body);
+    transition: transform 0.15s, background 0.2s, border-color 0.2s, color 0.2s;
+  }
+  .hp-btn:active { transform: scale(0.97); }
+
+  .hp-btn-fill {
+    background: var(--sage);
+    color: white;
+    border-radius: var(--r-full);
+    padding: 14px 32px;
+    font-size: 15px;
+    font-weight: 600;
+  }
+  .hp-btn-fill:hover { background: var(--sage-deep); }
+
+  .hp-btn-outline {
+    background: none;
+    border: 1.5px solid var(--bg4);
+    color: var(--ink2);
+    border-radius: var(--r-full);
+    padding: 14px 32px;
+    font-size: 15px;
+    font-weight: 600;
+  }
+  .hp-btn-outline:hover {
+    border-color: var(--ink5);
+    background: rgba(107, 127, 94, 0.04);
+  }
+
+  .hp-btn-dark {
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: var(--r-full);
+    padding: 10px 22px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .hp-btn-dark:hover { background: var(--ink2); }
+
+  /* Reveal-on-load animation */
+  .reveal {
+    opacity: 0;
+    transform: translateY(18px);
+    animation: hpRevealUp 0.55s var(--ease-smooth) forwards;
+  }
+  .d1 { animation-delay: 0.08s; }
+  .d2 { animation-delay: 0.18s; }
+  .d3 { animation-delay: 0.28s; }
+  .d4 { animation-delay: 0.38s; }
+  .d5 { animation-delay: 0.48s; }
+}
+
+/* ============================================================
+   Animations
+   ============================================================ */
+@keyframes hpRevealUp {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes hpFadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes hpRingPulse {
+  0%   { opacity: 0.45; transform: scale(1); }
+  100% { opacity: 0;    transform: scale(1.7); }
+}
+
+@keyframes hpSpinSlow {
+  from { transform: rotate(0); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes hpFloatA {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(-14px, 20px) scale(1.05); }
+}
+@keyframes hpFloatB {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(12px, -16px) scale(1.08); }
+}
+@keyframes hpFloatC {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(-8px, 12px) scale(0.95); }
+}
+
+/* ============================================================
+   Legacy utilities
+   Used by login/signup/debug screens that haven't been
+   redesigned yet. Remove these once those screens are migrated
+   to the new design system.
+   ============================================================ */
 @layer components {
   .page-shell {
     @apply max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8;
   }
-
   .card {
     @apply bg-white rounded-xl border border-slate-100 shadow-sm;
   }
-
   .section-title {
     @apply text-2xl font-semibold text-slate-900 tracking-tight;
   }
-
   .section-subtitle {
     @apply mt-1 text-sm text-slate-500;
   }
-
   .btn-primary {
     @apply inline-flex items-center justify-center rounded-md bg-sky-700 px-5 py-2.5
            text-sm font-semibold text-white shadow-sm
@@ -41,27 +187,36 @@
            focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2
            disabled:opacity-50 disabled:cursor-not-allowed;
   }
-
   .btn-secondary {
     @apply inline-flex items-center justify-center rounded-md border border-slate-300
            px-4 py-2 text-sm font-medium text-slate-700 bg-white
            hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed;
   }
-
   .field-label {
     @apply block text-sm font-medium text-slate-700 mb-1.5;
   }
-
   .field-input {
     @apply w-full px-3 py-2 rounded-md border border-slate-300
            text-sm text-slate-900 placeholder-slate-400
            focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500;
   }
-
   .field-textarea {
     @apply w-full px-3 py-2 rounded-md border border-slate-300
            text-sm text-slate-900 placeholder-slate-400
            focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500
            resize-y;
   }
+}
+
+/* ============================================================
+   Reduced motion
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .reveal { opacity: 1; transform: none; }
 }

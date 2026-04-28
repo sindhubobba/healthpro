@@ -1,0 +1,14 @@
+.tag {
+  font-family: var(--body);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 4px 12px;
+  border-radius: var(--r-full);
+  display: inline-block;
+}
+
+.copper { color: var(--copper); background: var(--copper-soft); }
+.sage   { color: var(--sage);   background: var(--sage-soft); }
+.teal   { color: var(--teal);   background: var(--teal-soft); }

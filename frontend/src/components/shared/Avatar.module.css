@@ -1,0 +1,15 @@
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-family: var(--body);
+  font-weight: 700;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.sage   { background: var(--sage-soft);   color: var(--sage); }
+.copper { background: var(--copper-soft); color: var(--copper); }
+.teal   { background: var(--teal-soft);   color: var(--teal); }
+.ink    { background: var(--bg2);         color: var(--ink3); }

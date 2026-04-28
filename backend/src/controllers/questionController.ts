@@ -129,7 +129,7 @@ export async function createQuestion(
   next: NextFunction
 ): Promise<void> {
   try {
-    const { title, content, authorName, tags } = req.body;
+    const { text, authorName, tags } = req.body;
     const userId = req.user?.userId;
 
     if (!userId) {
@@ -137,8 +137,8 @@ export async function createQuestion(
       return;
     }
 
-    if (!title || !content) {
-      res.status(400).json({ error: { message: 'Title and content are required' } });
+    if (!text || typeof text !== 'string' || !text.trim()) {
+      res.status(400).json({ error: { message: 'Question text is required' } });
       return;
     }
 
@@ -147,19 +147,18 @@ export async function createQuestion(
       return;
     }
 
-    // Create the question
+    const questionText = text.trim();
+
     const question = await queryOne<Question>(
       `INSERT INTO questions (user_id, title, content, author_name, tags)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING *`,
-      [userId, title, content, authorName.trim(), tags || []]
+      [userId, '', questionText, authorName.trim(), tags || []]
     );
 
     if (!question) {
       throw new Error('Failed to create question');
     }
-
-    const questionText = content?.trim() ? `${title}\n${content}` : title;
 
     // Search for similar questions (for duplicate detection / showing related)
     const similarQuestions = await findSimilarQuestions(questionText, question.id);
@@ -181,7 +180,7 @@ export async function createQuestion(
       [
         question.id,
         aiResponse.content,
-        aiResponse.usedContext,
+        true,
         aiResponse.source,
         aiResponse.attributionType,
         aiResponse.sourceMessageIds,

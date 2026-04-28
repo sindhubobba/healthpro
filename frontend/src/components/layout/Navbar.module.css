@@ -1,0 +1,107 @@
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(246, 247, 243, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(30, 37, 30, 0.06);
+}
+
+.inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+}
+
+.logo {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 1px;
+  cursor: pointer;
+  font-family: var(--display);
+  font-size: 24px;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.slash {
+  color: var(--sage);
+  font-weight: 300;
+  /* Optical adjustment so the slash sits visually on the same baseline */
+  margin-right: 1px;
+}
+
+.word {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.right {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
+.link {
+  font-family: var(--body);
+  font-size: 14px;
+  color: var(--ink3);
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.2s;
+  position: relative;
+}
+.link:hover { color: var(--ink); }
+
+/* Animated underline that scales in from left */
+.link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -3px;
+  height: 2px;
+  background: var(--sage);
+  border-radius: 1px;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.25s var(--ease-smooth);
+}
+.link:hover::after { transform: scaleX(1); }
+
+.linkButton {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--body);
+  font-size: 14px;
+  color: var(--ink4);
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.linkButton:hover { color: var(--ink2); }
+
+.skeletonAvatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--bg2);
+  animation: hpPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes hpPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
+@media (max-width: 700px) {
+  .right { gap: 16px; }
+  .link { display: none; }
+  .linkButton { display: none; }
+  /* Scope the size override to the navbar only — `:global` would otherwise
+     shrink every dark pill on the page. */
+  .right :global(.hp-btn-dark) { padding: 8px 18px; font-size: 12px; }
+}

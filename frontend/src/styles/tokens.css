@@ -1,0 +1,66 @@
+/* ============================================================
+   Gia design tokens
+   Extracted verbatim from healthpro-v5-sage.html. Do not edit
+   values without updating the prototype reference.
+   ============================================================ */
+
+:root {
+  /* Surfaces */
+  --bg: #f6f7f3;
+  --bg2: #eef0e9;
+  --bg3: #e4e7de;
+  --bg4: #d6d9cf;
+  --surface: #fafbf7;     /* card background; named `--white` in the prototype */
+
+  /* Ink */
+  --ink: #1e251e;
+  --ink2: #374037;
+  --ink3: #5b665b;
+  --ink4: #8a948a;
+  --ink5: #b3bab3;
+
+  /* Sage — primary brand */
+  --sage: #6b7f5e;
+  --sage-soft: rgba(107, 127, 94, 0.09);
+  --sage-mid: rgba(107, 127, 94, 0.17);
+  --sage-deep: #4e6142;
+
+  /* Olive — alerts / notifications */
+  --olive: #7a8548;
+  --olive-soft: rgba(122, 133, 72, 0.09);
+  --olive-mid: rgba(122, 133, 72, 0.16);
+
+  /* Copper — warm accent / cardiology */
+  --copper: #b87741;
+  --copper-soft: rgba(184, 119, 65, 0.08);
+  --copper-mid: rgba(184, 119, 65, 0.16);
+  --copper-deep: #9a6335;
+
+  /* Teal — Gia (the AI) accent: header tint, dot pulse, feedback hover */
+  --teal: #3a8578;
+  --teal-soft: rgba(58, 133, 120, 0.08);
+  --teal-mid: rgba(58, 133, 120, 0.15);
+
+  /* Type — wired to next/font CSS vars in layout.tsx */
+  --display: var(--font-display, 'Newsreader'), Georgia, serif;
+  --body: var(--font-body, 'Epilogue'), system-ui, sans-serif;
+
+  /* Radii */
+  --r: 12px;
+  --r2: 20px;
+  --r3: 28px;
+  --r-full: 999px;
+
+  /* Borders */
+  --border-soft: 1px solid rgba(30, 37, 30, 0.06);
+  --border-divider: 1px solid rgba(30, 37, 30, 0.05);
+  --border-ai: 1px solid rgba(58, 133, 120, 0.10);
+
+  /* Shadows */
+  --shadow-card-hover: 0 8px 32px rgba(30, 37, 30, 0.04);
+  --shadow-mockup: 0 24px 80px rgba(30, 37, 30, 0.06), 0 2px 8px rgba(30, 37, 30, 0.03);
+  --shadow-dock: 0 8px 32px rgba(30, 37, 30, 0.18);
+
+  /* Easing */
+  --ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+}

@@ -1,0 +1,12 @@
+.fade {
+  animation: hpPageFade 0.25s var(--ease-smooth) both;
+}
+
+@keyframes hpPageFade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fade { animation: none; opacity: 1; }
+}
